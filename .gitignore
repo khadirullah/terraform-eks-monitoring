@@ -1,0 +1,30 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!terraform.tfvars.example
+# .terraform.lock.hcl is tracked on purpose. It pins the exact provider versions,
+# so a fresh clone or a CI run resolves the same providers this cluster was built with.
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+*.tfplan
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.pem
+*.key
+.env
