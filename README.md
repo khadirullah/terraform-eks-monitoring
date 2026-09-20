@@ -81,7 +81,7 @@ That distinction is the point of the last column. An alert whose metrics are mis
 
 - [Terraform](https://www.terraform.io/downloads) >= 1.5.0
 - [AWS CLI](https://aws.amazon.com/cli/) configured with credentials
-- [kubectl](https://kubernetes.io/docs/tasks/tools/) >= 1.33
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) >= 1.34
 - [ArgoCD CLI](https://argo-cd.readthedocs.io/en/stable/cli_installation/), optional
 - An AWS account with permissions for EKS, VPC, IAM and EC2, and a billing alarm set
 
