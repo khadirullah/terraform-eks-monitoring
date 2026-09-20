@@ -49,7 +49,7 @@ data:
         slack_configs:
           - api_url: 'https://hooks.slack.com/services/REPLACE/WITH/WEBHOOK'
             channel: '#monitoring-critical'
-            title: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+            title: 'CRITICAL: {{ .GroupLabels.alertname }}'
             text: >-
               {{ range .Alerts }}
               *Alert:* {{ .Annotations.summary }}
