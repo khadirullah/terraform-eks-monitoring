@@ -1,0 +1,139 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: grafana
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus:9090
+        isDefault: true
+        editable: false
+---
+# Placeholder credentials. Replace both values before this touches a real
+# cluster, or better, delete this Secret from git and let Sealed Secrets or
+# External Secrets supply grafana-admin instead. Anything committed here is
+# readable by anyone who can clone the repo, and Argo CD syncs it straight
+# into the cluster.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana-admin
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: grafana
+type: Opaque
+stringData:
+  admin-user: "admin"
+  admin-password: "REPLACE_ME_BEFORE_USE"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/component: dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: grafana
+      app.kubernetes.io/component: dashboard
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: grafana
+        app.kubernetes.io/component: dashboard
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 472
+        fsGroup: 472
+      containers:
+        - name: grafana
+          image: grafana/grafana:13.2.2
+          env:
+            - name: GF_SECURITY_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-admin
+                  key: admin-user
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-admin
+                  key: admin-password
+            # Plugin note: grafana-simple-json-datasource is an AngularJS
+            # plugin, and Grafana dropped AngularJS in v12, so it will not
+            # load here. yesoreyeram-infinity-datasource is the replacement
+            # if a JSON endpoint datasource is needed.
+            - name: GF_INSTALL_PLUGINS
+              value: "grafana-clock-panel"
+          ports:
+            - containerPort: 3000
+              name: http
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 192Mi
+            limits:
+              cpu: 250m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: datasources
+              mountPath: /etc/grafana/provisioning/datasources
+            - name: storage
+              mountPath: /var/lib/grafana
+      volumes:
+        - name: datasources
+          configMap:
+            name: grafana-datasources
+        # emptyDir, not a PVC. Grafana's SQLite database sits on the node's
+        # ephemeral disk, so any dashboard saved in the UI, plus users and
+        # API keys, disappear when the pod restarts. Acceptable for a cluster
+        # that lives for a weekend, and the Prometheus datasource is
+        # provisioned from a ConfigMap so it always comes back. Production
+        # would use a PersistentVolumeClaim backed by the EBS CSI driver,
+        # which is out of scope here.
+        - name: storage
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/component: dashboard
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3000
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/component: dashboard

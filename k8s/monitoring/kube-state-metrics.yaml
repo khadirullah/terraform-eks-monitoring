@@ -1,0 +1,174 @@
+# kube-state-metrics listens to the Kubernetes API and turns the state of
+# objects into metrics. It reports what the API server thinks is true, not what
+# the machine is doing, so kube_node_status_condition and
+# kube_pod_container_status_restarts_total come from here. The kubelet and
+# cAdvisor jobs in prometheus-config.yaml cannot produce those series, which is
+# why NodeNotReady and PodCrashLooping had nothing to evaluate against before
+# this file existed.
+#
+# It holds no state of its own. Every value is read from the API server on
+# scrape, so one replica is enough and a restart loses nothing.
+# ── ServiceAccount ──
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kube-state-metrics
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: kube-state-metrics
+---
+# Read-only and scoped on purpose. A wildcard rule would also hand this pod
+# every Secret in the cluster, and it runs an HTTP endpoint that anything in
+# the pod network can reach. get/list/watch is all the collectors need, and the
+# resource list matches the --resources flag on the Deployment below so no
+# collector starts up and then spams permission-denied on every resync.
+# ── ClusterRole ──
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kube-state-metrics
+  labels:
+    app.kubernetes.io/name: kube-state-metrics
+rules:
+  # nodes feeds kube_node_status_condition, which NodeNotReady queries.
+  # pods feeds kube_pod_container_status_restarts_total, which PodCrashLooping
+  # queries, plus the per-pod phase and resource-request series.
+  # namespaces gives kube_namespace_* and lets the pod metrics be grouped.
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - pods
+      - namespaces
+    verbs: ["get", "list", "watch"]
+  # deployments gives kube_deployment_status_replicas_available, the usual
+  # "is my app actually up" panel. replicasets is what resolves a pod back to
+  # the Deployment that owns it. daemonsets and statefulsets are here because
+  # node-exporter and Argo CD run as those, and without them both would be
+  # invisible in Grafana.
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - replicasets
+      - daemonsets
+      - statefulsets
+    verbs: ["get", "list", "watch"]
+---
+# ── ClusterRoleBinding ──
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kube-state-metrics
+  labels:
+    app.kubernetes.io/name: kube-state-metrics
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kube-state-metrics
+subjects:
+  - kind: ServiceAccount
+    name: kube-state-metrics
+    namespace: monitoring
+---
+# ── Deployment ──
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kube-state-metrics
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/component: exporter
+spec:
+  # One replica. Two would watch the same objects and export the same series
+  # twice, and Prometheus would count every restart and every node condition
+  # double. Scale this out only with sharding, which a two-node cluster does
+  # not need.
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kube-state-metrics
+      app.kubernetes.io/component: exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kube-state-metrics
+        app.kubernetes.io/component: exporter
+    spec:
+      serviceAccountName: kube-state-metrics
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        fsGroup: 65534
+      containers:
+        - name: kube-state-metrics
+          image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.20.0
+          args:
+            # Without this flag the default collector set turns on, including
+            # secrets and configmaps, and every one of those watches fails
+            # against the ClusterRole above. Listing the collectors keeps the
+            # logs clean and keeps the metric cardinality down on a node that
+            # only has 4GiB of RAM.
+            - "--resources=nodes,pods,namespaces,deployments,replicasets,daemonsets,statefulsets"
+            - "--port=8080"
+            - "--telemetry-port=8081"
+          ports:
+            # 8080 carries the cluster metrics Prometheus scrapes.
+            - containerPort: 8080
+              name: http-metrics
+              protocol: TCP
+            # 8081 carries kube-state-metrics' own metrics about itself, such
+            # as watch error counts. Separate port so a slow cluster scrape
+            # never hides the fact that the exporter itself is unhealthy.
+            - containerPort: 8081
+              name: telemetry
+              protocol: TCP
+          resources:
+            # Memory here tracks the number of objects in the cluster, because
+            # the whole watch cache is held in the process. A two-node cluster
+            # with a few dozen pods sits well under 64Mi.
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 192Mi
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: http-metrics
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            # /readyz is served on the telemetry port, not the metrics port.
+            # It only goes green once the initial list of every watched
+            # resource has finished, so the pod stays out of the Service until
+            # its numbers are real.
+            httpGet:
+              path: /readyz
+              port: telemetry
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+# ── Service ──
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-state-metrics
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/component: exporter
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: http-metrics
+      protocol: TCP
+      name: http-metrics
+    - port: 8081
+      targetPort: telemetry
+      protocol: TCP
+      name: telemetry
+  selector:
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/component: exporter

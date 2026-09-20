@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: eks-monitoring-stack
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: eks-monitoring
+    app.kubernetes.io/part-of: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/khadirullah/terraform-eks-monitoring.git
+    targetRevision: main
+    path: k8s/monitoring
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PruneLast=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

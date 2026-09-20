@@ -1,0 +1,162 @@
+# node-exporter reports what the machine is doing, which is the half
+# kube-state-metrics cannot see. CPU time per mode, memory pressure, disk and
+# network counters all come from the kernel's own files rather than from the
+# API server. HighCPUUsage and HighMemoryUsage in prometheus-config.yaml query
+# node_cpu_seconds_total and node_memory_MemAvailable_bytes, and those exist
+# only if this runs.
+#
+# A DaemonSet, not a Deployment, because a node can only be measured from on
+# top of it. One replica would describe one node and leave the other one dark.
+# ── DaemonSet ──
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-exporter
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: node-exporter
+    app.kubernetes.io/component: exporter
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: node-exporter
+      app.kubernetes.io/component: exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: node-exporter
+        app.kubernetes.io/component: exporter
+    spec:
+      # hostNetwork puts the container straight on the node's network stack
+      # instead of giving it a pod IP. Two reasons. The node_network_* counters
+      # then describe the node's real interfaces rather than the veth pair of a
+      # sandbox that nobody cares about, and the scrape target becomes the node
+      # IP itself, which is stable across restarts, so the instance label in an
+      # alert names a machine you can go and look at.
+      hostNetwork: true
+      # hostPID shares the node's process ID namespace. Without it the
+      # container sees only its own process, so /proc/1 is node-exporter rather
+      # than the node's init, and anything counted per process, such as
+      # node_processes_* and the entropy and pressure readings that walk /proc,
+      # would describe the container instead of the host.
+      hostPID: true
+      # hostNetwork means the pod inherits the node's resolv.conf, which cannot
+      # resolve cluster Service names. ClusterFirstWithHostNet puts CoreDNS back
+      # in front so the pod still resolves in-cluster names if it ever needs to.
+      dnsPolicy: ClusterFirstWithHostNet
+      # Tolerate every taint, including NoExecute, so this also lands on a node
+      # that has been cordoned, marked with a dedicated taint, or is running as
+      # a control-plane style node. A monitoring agent that skips the unusual
+      # nodes is useless exactly when those nodes go wrong. On this cluster no
+      # node is tainted today, but that changes the first time someone adds a
+      # spot or GPU node group.
+      tolerations:
+        - operator: Exists
+      securityContext:
+        # Root is not needed. Everything below is read out of world-readable
+        # kernel files, so the exporter runs as nobody.
+        runAsNonRoot: true
+        runAsUser: 65534
+      containers:
+        - name: node-exporter
+          image: quay.io/prometheus/node-exporter:v1.12.1
+          args:
+            # A container gets its own /proc and /sys showing the container's
+            # view of the world. The host copies are mounted under /host below
+            # and these flags point the collectors at those instead, otherwise
+            # every CPU and memory number would describe the cgroup rather than
+            # the node.
+            - "--path.procfs=/host/proc"
+            - "--path.sysfs=/host/sys"
+            - "--path.rootfs=/host/root"
+            - "--web.listen-address=:9100"
+            # Without this the filesystem collector reports a row for every
+            # container overlay and every projected ServiceAccount token mount
+            # on the node. That is hundreds of series that describe nothing and
+            # it is the usual reason a small Prometheus starts eating memory.
+            - "--collector.filesystem.mount-points-exclude=^/(dev|proc|sys|run/k3s/containerd/.+|var/lib/docker/.+|var/lib/kubelet/.+)($|/)"
+            - "--collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$"
+          ports:
+            - containerPort: 9100
+              name: metrics
+              protocol: TCP
+          resources:
+            # This runs on every node, so the request is charged once per node
+            # and it comes out of the same pool the workloads need. node-exporter
+            # does almost nothing between scrapes, so keep both numbers small.
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 96Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: metrics
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: metrics
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            # All three are readOnly. The exporter never writes anything, and a
+            # writable mount of the host root inside a pod that every node runs
+            # is a container escape waiting to be found.
+            - name: proc
+              mountPath: /host/proc
+              readOnly: true
+            - name: sys
+              mountPath: /host/sys
+              readOnly: true
+            - name: root
+              mountPath: /host/root
+              readOnly: true
+              # The filesystem collector needs to see mounts that appear on the
+              # node after this pod started, such as a freshly attached EBS
+              # volume. HostToContainer propagates those into the container.
+              # Without it the mount table is frozen at pod start and a new disk
+              # is never reported, so PersistentVolume capacity looks fine right
+              # up until it is not.
+              mountPropagation: HostToContainer
+      volumes:
+        # hostPath, not emptyDir. The whole point is to read the node's own
+        # files, so there is nothing here to persist and nothing to lose.
+        - name: proc
+          hostPath:
+            path: /proc
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: root
+          hostPath:
+            path: /
+---
+# Headless, so the Service has no ClusterIP of its own. A normal ClusterIP
+# would load balance and every scrape would land on one random node, leaving
+# the other node unsampled and the graphs jumping between two machines.
+# Prometheus discovers the endpoints behind this Service instead and scrapes
+# each pod directly. See the node-exporter job in prometheus-config.yaml.
+# ── Service ──
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-exporter
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: node-exporter
+    app.kubernetes.io/component: exporter
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: 9100
+      targetPort: metrics
+      protocol: TCP
+      name: metrics
+  selector:
+    app.kubernetes.io/name: node-exporter
+    app.kubernetes.io/component: exporter

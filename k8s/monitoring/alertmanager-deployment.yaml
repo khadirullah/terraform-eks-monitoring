@@ -1,0 +1,156 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: alertmanager
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+
+    route:
+      group_by: ['alertname', 'namespace']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 1h
+      receiver: 'slack-notifications'
+      routes:
+        # matchers replaces the older match map, which has been deprecated
+        # since 0.22 and logs a warning on every config reload.
+        - matchers:
+            - severity = "critical"
+          receiver: 'slack-critical'
+          repeat_interval: 5m
+        - matchers:
+            - severity = "warning"
+          receiver: 'slack-notifications'
+
+    # The api_url values below are placeholders. A real webhook is a bearer
+    # credential, so anyone holding it can post to the channel. Do not paste
+    # one into this file. Move it to a Secret and reference it with
+    # api_url_file, or seal it, before pointing this at a real workspace.
+    receivers:
+      - name: 'slack-notifications'
+        slack_configs:
+          - api_url: 'https://hooks.slack.com/services/REPLACE/WITH/WEBHOOK'
+            channel: '#monitoring-alerts'
+            title: '{{ .GroupLabels.alertname }}'
+            text: >-
+              {{ range .Alerts }}
+              *Alert:* {{ .Annotations.summary }}
+              *Description:* {{ .Annotations.description }}
+              *Severity:* {{ .Labels.severity }}
+              {{ end }}
+            send_resolved: true
+
+      - name: 'slack-critical'
+        slack_configs:
+          - api_url: 'https://hooks.slack.com/services/REPLACE/WITH/WEBHOOK'
+            channel: '#monitoring-critical'
+            title: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+            text: >-
+              {{ range .Alerts }}
+              *Alert:* {{ .Annotations.summary }}
+              *Description:* {{ .Annotations.description }}
+              *Severity:* {{ .Labels.severity }}
+              {{ end }}
+            send_resolved: true
+
+    inhibit_rules:
+      - source_matchers:
+          - severity = "critical"
+        target_matchers:
+          - severity = "warning"
+        equal: ['alertname', 'namespace']
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/component: alerting
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: alertmanager
+      app.kubernetes.io/component: alerting
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: alertmanager
+        app.kubernetes.io/component: alerting
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        fsGroup: 65534
+      containers:
+        - name: alertmanager
+          image: prom/alertmanager:v0.34.1
+          args:
+            - "--config.file=/etc/alertmanager/alertmanager.yml"
+            - "--storage.path=/alertmanager"
+          ports:
+            - containerPort: 9093
+              name: http
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alertmanager
+            - name: storage
+              mountPath: /alertmanager
+      volumes:
+        - name: config
+          configMap:
+            name: alertmanager-config
+        # emptyDir, not a PVC. Alertmanager keeps its silences and its
+        # notification log here, so a pod restart wipes every active silence
+        # and can re-send alerts that were already delivered. Fine for a
+        # cluster that lives for a weekend. Production would use a
+        # PersistentVolumeClaim backed by the EBS CSI driver, which is out of
+        # scope here.
+        - name: storage
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/component: alerting
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9093
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/component: alerting

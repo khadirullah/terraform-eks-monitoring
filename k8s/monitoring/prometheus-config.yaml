@@ -1,0 +1,210 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/component: server
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    # ── Alert Rules ──
+    rule_files:
+      - "/etc/prometheus/alert-rules.yml"
+
+    # ── AlertManager Configuration ──
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets:
+                - alertmanager:9093
+
+    # ── Scrape Configurations ──
+    #
+    # There are deliberately no jobs for etcd, kube-scheduler or
+    # kube-controller-manager. On EKS those run on the AWS-managed control
+    # plane, which has no reachable endpoint from inside the cluster, so any
+    # such job would sit in the targets list failing forever. The API server is
+    # the only control-plane component EKS exposes, and it is scraped below.
+    scrape_configs:
+      # Prometheus self-monitoring
+      - job_name: "prometheus"
+        static_configs:
+          - targets: ["localhost:9090"]
+
+      # Kubernetes API server
+      - job_name: "kubernetes-apiservers"
+        kubernetes_sd_configs:
+          - role: endpoints
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+          - source_labels:
+              [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+            action: keep
+            regex: default;kubernetes;https
+
+      # Kubernetes nodes via kubelet, scraped on 10250 directly.
+      # Needs the nodes/metrics permission in the prometheus ClusterRole.
+      - job_name: "kubernetes-nodes"
+        kubernetes_sd_configs:
+          - role: node
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          # EKS kubelets serve a self-signed certificate that the cluster CA
+          # did not issue, so verifying it here would fail on every scrape.
+          insecure_skip_verify: true
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+
+      # Container metrics from cAdvisor, which is built into the kubelet.
+      # Same host and port as the job above, different path. This is where
+      # container_cpu_* and container_memory_* come from; without it there are
+      # no per-pod resource metrics at all.
+      - job_name: "kubernetes-cadvisor"
+        kubernetes_sd_configs:
+          - role: node
+        scheme: https
+        metrics_path: /metrics/cadvisor
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          insecure_skip_verify: true
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+
+      # kube-state-metrics, one Deployment with a single replica behind a
+      # ClusterIP, so a static target is honest here. It exports the kube_*
+      # series that NodeNotReady and PodCrashLooping query.
+      - job_name: "kube-state-metrics"
+        static_configs:
+          - targets: ["kube-state-metrics:8080"]
+
+      # node-exporter, one pod per node from a DaemonSet. Discovered through
+      # the Service endpoints rather than a static target, because the Service
+      # is headless and a single address would only ever sample one node.
+      - job_name: "node-exporter"
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names: ["monitoring"]
+        relabel_configs:
+          # role: endpoints returns every endpoint in the namespace, so drop
+          # everything that is not this Service.
+          - source_labels: [__meta_kubernetes_service_name]
+            action: keep
+            regex: node-exporter
+          # HighCPUUsage and HighMemoryUsage group by instance. The default
+          # instance is host:port, which under hostNetwork is the node IP and
+          # changes when a node is replaced. Use the node name so an alert
+          # names a machine rather than an address.
+          - source_labels: [__meta_kubernetes_endpoint_node_name]
+            action: replace
+            target_label: instance
+
+      # Kubernetes pods with prometheus.io annotations.
+      # Neither exporter above carries prometheus.io/scrape annotations, on
+      # purpose. They are scraped by name in the two jobs above, and an
+      # annotation would have this job scrape them a second time under a
+      # different job label.
+      - job_name: "kubernetes-pods"
+        kubernetes_sd_configs:
+          - role: pod
+        # Prometheus 3 rejects a scrape whose Content-Type it cannot parse.
+        # Older exporters send no Content-Type, so fall back to the classic
+        # text format instead of failing the target.
+        fallback_scrape_protocol: PrometheusText0.0.4
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+          - action: labelmap
+            regex: __meta_kubernetes_pod_label_(.+)
+          - source_labels: [__meta_kubernetes_namespace]
+            action: replace
+            target_label: kubernetes_namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            action: replace
+            target_label: kubernetes_pod_name
+
+  alert-rules.yml: |
+    # All five rules have data behind them now. The kube_* series come from
+    # kube-state-metrics.yaml, the node_* series come from node-exporter.yaml,
+    # and kubelet_volume_stats_* comes from the kubelet job above. Both
+    # exporters are scraped by the jobs added to scrape_configs, so
+    # NodeNotReady, HighCPUUsage, HighMemoryUsage, PodCrashLooping and
+    # PersistentVolumeFull can all fire.
+    #
+    # One caveat on PersistentVolumeFull. It is wired up correctly, but this
+    # stack mounts emptyDir everywhere and has no PersistentVolumeClaims, so
+    # kubelet_volume_stats_* has nothing to report until something in the
+    # cluster actually claims a volume. That is a missing workload, not a
+    # missing exporter.
+    groups:
+      - name: node-alerts
+        rules:
+          - alert: NodeNotReady
+            expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Node {{ $labels.node }} is not ready"
+              description: "Node {{ $labels.node }} has been in a not-ready state for more than 5 minutes."
+
+          - alert: HighCPUUsage
+            expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High CPU usage on {{ $labels.instance }}"
+              description: "CPU usage is above 80% for more than 10 minutes on {{ $labels.instance }}."
+
+          - alert: HighMemoryUsage
+            expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High memory usage on {{ $labels.instance }}"
+              description: "Memory usage is above 85% for more than 10 minutes on {{ $labels.instance }}."
+
+      - name: pod-alerts
+        rules:
+          - alert: PodCrashLooping
+            expr: increase(kube_pod_container_status_restarts_total[15m]) > 5
+            for: 0m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash looping"
+              description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has restarted more than 5 times in the last 15 minutes."
+
+          - alert: PersistentVolumeFull
+            expr: kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes * 100 > 90
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "PersistentVolume {{ $labels.persistentvolumeclaim }} is nearly full"
+              description: "PV {{ $labels.persistentvolumeclaim }} in namespace {{ $labels.namespace }} is {{ $value }}% full."
