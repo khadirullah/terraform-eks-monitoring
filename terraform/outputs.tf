@@ -2,6 +2,11 @@
 # Outputs
 # ──────────────────────────────────────────────
 
+output "aws_region" {
+  description = "Region everything was created in. scripts/destroy.sh reads this so the orphan sweep looks in the right place."
+  value       = var.aws_region
+}
+
 output "vpc_id" {
   description = "ID of the VPC"
   value       = aws_vpc.main.id
