@@ -167,6 +167,12 @@ data:
             for: 5m
             labels:
               severity: critical
+              # kube-state-metrics names the node in a "node" label, while the
+              # node-exporter rules below carry it as "instance". Copying it
+              # here gives both sides the same label, which is what lets the
+              # Alertmanager inhibit rule silence a node's warnings once this
+              # critical is firing for it.
+              instance: "{{ $labels.node }}"
             annotations:
               summary: "Node {{ $labels.node }} is not ready"
               description: "Node {{ $labels.node }} has been in a not-ready state for more than 5 minutes."
