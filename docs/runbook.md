@@ -162,6 +162,13 @@ cluster exists while AWS keeps billing for it.
 **`kubectl` says Unauthorized.** You are not the identity that created the
 cluster. Check with `aws sts get-caller-identity`.
 
+**Grafana keeps restarting.** `kubectl describe pod -n monitoring -l
+app.kubernetes.io/name=grafana` and read Last State. `OOMKilled` means it hit
+its memory limit. `Error` with exit code 137 and "Liveness probe failed" in the
+events means it was too slow to answer `/api/health` and the kubelet killed it.
+Both happened at a 512Mi limit, which is why the limit is now 1Gi. A restart
+also drops any `port-forward` to the old container, so start it again.
+
 **Pods stuck Pending.** Usually not enough room on two t3.medium nodes,
 especially with Argo CD also running. `kubectl describe pod` names the reason.
 

@@ -81,19 +81,26 @@ spec:
             - containerPort: 3000
               name: http
               protocol: TCP
+          # Grafana 13 sits around 350Mi idle and climbs past 500Mi once someone
+          # runs a few Explore queries. At a 512Mi limit it was OOMKilled during
+          # normal use, so the limit leaves room and the request covers idle.
           resources:
             requests:
               cpu: 100m
-              memory: 192Mi
+              memory: 384Mi
             limits:
               cpu: 250m
-              memory: 512Mi
+              memory: 1Gi
+          # The default 1s timeout is too short when the container is busy or
+          # close to its memory limit. Three slow answers in a row and the
+          # kubelet restarts a Grafana that was working.
           livenessProbe:
             httpGet:
               path: /api/health
               port: http
             initialDelaySeconds: 60
             periodSeconds: 10
+            timeoutSeconds: 5
           readinessProbe:
             httpGet:
               path: /api/health
