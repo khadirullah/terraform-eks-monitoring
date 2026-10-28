@@ -282,7 +282,7 @@ So the script deletes LoadBalancer services first, waits for AWS to release them
 then destroys, then sweeps for orphaned load balancers, unattached Elastic IPs and
 stray EBS volumes and exits non-zero if it finds any.
 
-Nothing in this stack currently creates a LoadBalancer, since the dashboards are
+Nothing in this stack currently creates a LoadBalancer, since the UIs are
 reached with `port-forward`. The check is there because that will not stay true.
 
 ### `deploy.sh` makes you confirm the cost

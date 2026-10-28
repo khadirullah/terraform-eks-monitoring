@@ -6,7 +6,7 @@ Infrastructure as Code for a Kubernetes cluster on AWS EKS with Prometheus, Graf
 ![AWS](https://img.shields.io/badge/AWS-EKS-FF9900?logo=amazonaws&logoColor=white)
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-v1.35-326CE5?logo=kubernetes&logoColor=white)
 ![Prometheus](https://img.shields.io/badge/Prometheus-Monitoring-E6522C?logo=prometheus&logoColor=white)
-![Grafana](https://img.shields.io/badge/Grafana-Dashboards-F46800?logo=grafana&logoColor=white)
+![Grafana](https://img.shields.io/badge/Grafana-v13-F46800?logo=grafana&logoColor=white)
 ![ArgoCD](https://img.shields.io/badge/ArgoCD-GitOps-EF7B4D?logo=argo&logoColor=white)
 
 This cluster is built to be stood up, worked with, and destroyed the same weekend. Several choices are deliberately cheaper and simpler than production would be, and each one is written down in [docs/decisions.md](docs/decisions.md) with what production does instead.
@@ -59,7 +59,7 @@ The control plane is not in the diagram because AWS runs it. You never see those
 | Metrics | Prometheus 3.x | Cluster and application metrics |
 | Cluster state | kube-state-metrics | Pod, node and workload object metrics |
 | Host metrics | node-exporter | Per-node CPU, memory, disk and network |
-| Visualization | Grafana | Dashboards |
+| Visualization | Grafana | Explore queries against Prometheus |
 | Alerting | AlertManager | Routes alerts to Slack |
 | GitOps | ArgoCD | Syncs the cluster from Git |
 
@@ -128,7 +128,7 @@ kubectl get pods -n monitoring
 
 The namespace goes first on its own line. kubectl applies a directory in file name order, and `alertmanager-deployment.yaml` sorts before `namespace.yaml`.
 
-### 5. Reach the dashboards
+### 5. Reach the UIs
 
 ```bash
 kubectl port-forward -n monitoring svc/grafana      3000:3000
@@ -192,7 +192,9 @@ One NAT gateway, not one per availability zone. Cheaper, and a single point of f
 
 Local Terraform state, no S3 backend and no locking. Fine for one person, wrong for a team.
 
-No ingress and no load balancers. Dashboards are reached with `port-forward`.
+No ingress and no load balancers. Grafana, Prometheus and Alertmanager are reached with `port-forward`.
+
+No provisioned dashboards. Grafana starts with the Prometheus data source wired up and an empty dashboard list, so graphs come from Explore. Importing a community dashboard such as Node Exporter Full (ID 1860) takes a minute, but it lives in `emptyDir` and is gone after the next pod restart.
 
 ## Layout
 

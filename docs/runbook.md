@@ -83,7 +83,7 @@ private route table actually points at it.
 If CoreDNS sits Pending, there were no nodes when the addon installed. That is
 why `coredns` has an explicit `depends_on` for the node group.
 
-## Reach the dashboards
+## Reach the UIs
 
 Port-forward, one terminal each. Nothing here is exposed publicly on purpose.
 
