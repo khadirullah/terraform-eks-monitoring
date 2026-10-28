@@ -195,6 +195,19 @@ that tolerates the skew first.
 Read [cost.md](cost.md) for why this is not just `terraform destroy`, and for
 the billing check to run the next day.
 
+The destroy leaves your local kubeconfig alone. `aws eks update-kubeconfig`
+added a context, a cluster and a user, all named after the cluster's ARN, and
+kubectl keeps pointing at the dead endpoint until you remove them. Switch to
+another context first if you have one.
+
+```bash
+kubectl config get-contexts
+kubectl config use-context <another-context>
+kubectl config delete-context arn:aws:eks:<region>:<account-id>:cluster/eks-monitoring
+kubectl config delete-cluster arn:aws:eks:<region>:<account-id>:cluster/eks-monitoring
+kubectl config delete-user    arn:aws:eks:<region>:<account-id>:cluster/eks-monitoring
+```
+
 ## When it goes wrong
 
 **`terraform apply` fails partway.** State is local in
