@@ -71,6 +71,15 @@ resource "aws_eks_cluster" "main" {
     bootstrap_cluster_creator_admin_permissions = true
   }
 
+  # AWS defaults new clusters to EXTENDED. When the version leaves standard
+  # support, an EXTENDED cluster keeps running and starts billing the control
+  # plane at the extended rate. STANDARD makes AWS upgrade it to the next
+  # version instead. A forced upgrade is the better failure for a cluster that
+  # might be forgotten.
+  upgrade_policy {
+    support_type = "STANDARD"
+  }
+
   vpc_config {
     subnet_ids              = concat(aws_subnet.private[*].id, aws_subnet.public[*].id)
     security_group_ids      = [aws_security_group.eks_cluster.id]

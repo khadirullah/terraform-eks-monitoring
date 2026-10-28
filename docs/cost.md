@@ -40,6 +40,13 @@ This is why `cluster_version` is pinned to a version inside the standard
 support window, and why moving it forward is part of the routine rather than
 something to put off.
 
+Pinning the version is not enough on its own. AWS creates clusters with
+`upgrade_policy` set to `EXTENDED` unless you say otherwise, so a cluster left
+running past its version's standard support quietly moves to the extended rate.
+`eks.tf` sets `support_type = "STANDARD"`, which makes AWS upgrade the control
+plane to the next version instead. The first live run of this repo showed
+`EXTENDED` in the destroy plan before this was set.
+
 ## Teardown
 
 ```bash

@@ -20,6 +20,18 @@ rather than to be first.
 You cannot skip minor versions when upgrading and you cannot go back down, so the
 version you start on determines how many hops you need later.
 
+### Upgrade policy `STANDARD`, not the `EXTENDED` default
+
+With `EXTENDED`, a cluster whose version leaves standard support keeps running
+on that version for up to another year and bills the control plane at the
+extended rate. With `STANDARD`, AWS upgrades it to the next minor version at the
+end of standard support.
+
+A forced upgrade can break workloads that use removed APIs, which is the cost of
+this choice. For a cluster meant to live a weekend, a surprise bill is the worse
+failure. Production teams that need to hold a version while they migrate pick
+`EXTENDED` on purpose and budget for it.
+
 ### Raw `aws_*` resources instead of the community EKS module
 
 `terraform-aws-modules/eks` would replace most of `eks.tf` and `vpc.tf` with
