@@ -123,6 +123,49 @@ An empty result for any of those means that exporter is not being scraped, and
 any alert rule depending on it is dead. A rule that cannot fire is worse than no
 rule, because the dashboard looks fine.
 
+### Make the alerts fire
+
+Scraping working is still not the same as alerting working. Break something on
+purpose and watch it go through Prometheus to Alertmanager.
+
+A crashing pod, for `PodCrashLooping`:
+
+```bash
+kubectl run crashtest --image=busybox -- sh -c "exit 1"
+```
+
+It reaches CrashLoopBackOff within a minute and the alert fires 5 minutes after
+that. Check `localhost:9090/alerts`, then `localhost:9093` for the same alert
+under `slack-critical`. Delete the pod when done.
+
+A dead node, for `NodeNotReady`. Stop the kubelet on a node that is not running
+Prometheus, otherwise Prometheus goes down with it:
+
+```bash
+kubectl get pods -n monitoring -o wide          # see where prometheus runs
+kubectl debug node/<other-node> --profile=sysadmin --image=busybox:1.37 \
+  -- nsenter -t 1 -m -u -i -n -p -- systemctl stop kubelet
+```
+
+Do not terminate the instance for this test. AWS deletes the Node object within
+a minute of termination, so the series disappears before the 5 minute `for`
+runs out and the alert never fires. With only the kubelet stopped, the node
+goes NotReady (Ready shows `Unknown`) in under a minute and the alert fires 5
+minutes later. Pods are evicted to the other node at the same 5 minute mark.
+
+On the first run, node-exporter on the dead node stayed UP while its kubelet
+and cAdvisor targets went DOWN. NotReady means the kubelet stopped reporting,
+not that the machine is off.
+
+Bring it back by rebooting the instance, which starts the kubelet again:
+
+```bash
+aws ec2 reboot-instances --region <region> --instance-ids <instance-id>
+```
+
+The node was Ready about 30 seconds after the reboot and the alert resolved
+right after. Pods do not move back on their own.
+
 ## Upgrading the cluster
 
 Order matters and you cannot skip versions or go backwards.
