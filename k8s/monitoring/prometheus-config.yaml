@@ -203,8 +203,9 @@ data:
           # A "restarts above 5 in 15m" rule fires early on and then clears
           # while the pod is still broken.
           #
-          # max_over_time bridges the few seconds of each restart, when the
-          # container is Running or Terminated instead of waiting. Without it
+          # max_over_time bridges the gap at each restart, when the container
+          # is Running or Terminated instead of waiting. On a live cluster the
+          # series was missing for 75 to 90 seconds every time. Without it
           # every restart resets the 5m "for", and once the backoff reaches its
           # 5 minute cap the state never lasts 5 unbroken minutes.
           - alert: PodCrashLooping
