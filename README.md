@@ -13,7 +13,7 @@ This cluster is built to be stood up, worked with, and destroyed the same weeken
 
 **It bills by the hour while it runs.** Read [docs/cost.md](docs/cost.md) before the first apply and tear it down with `scripts/destroy.sh`.
 
-**Status:** Applied to a live EKS cluster on 2026-10-28 (2 x t3.small, us-east-1) and torn down the same evening. All ten scrape targets were up, a crashing pod fired `PodCrashLooping`, a node with its kubelet stopped fired `NodeNotReady`, and both alerts reached Alertmanager. That run found the Grafana memory limit, crash-loop rule and upgrade policy problems fixed since. Those fixes pass `terraform validate` and parse, but have not been through a second live run yet.
+**Status:** Applied to a live EKS cluster on 2026-10-28 (2 x t3.small, us-east-1) and torn down the same evening. All ten scrape targets were up, a crashing pod fired `PodCrashLooping`, a node with its kubelet stopped fired `NodeNotReady`, and both alerts reached Alertmanager. That run found the Grafana memory limit, crash-loop rule and upgrade policy problems fixed since. A second live run on 2026-10-28 confirmed all three. The cluster came up with upgrade policy `STANDARD`, Grafana peaked at 610 MiB under the new 1Gi limit with no restarts, and `PodCrashLooping` stayed firing for over 20 minutes of a crash loop.
 
 ## Architecture
 
