@@ -15,7 +15,7 @@ by region.
 | EKS control plane | ~$0.10 per hour, per cluster | Yes. Flat rate, no usage component. |
 | NAT gateway | ~$0.05 per hour, plus per GB processed | Yes. The hourly charge runs whether or not a byte moves. |
 | 2x t3.medium nodes | ~$0.04 per hour each | Yes, while running. |
-| Elastic IP | Free while attached to the NAT gateway | Charged hourly if it ends up unattached. |
+| Elastic IP | ~$0.005 per hour | Yes. AWS has charged for every public IPv4 address since February 2024, attached or not. |
 | EBS root volumes | 2 x 20GB gp3, a few dollars a month | Yes, and they survive if a destroy half fails. |
 
 The thing to notice is that nothing in that table gets cheaper by being unused.
