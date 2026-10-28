@@ -159,6 +159,20 @@ the billing check to run the next day.
 Terraform picks up where it stopped. Delete that file and Terraform forgets the
 cluster exists while AWS keeps billing for it.
 
+**`kubectl` cannot resolve the cluster endpoint right after apply.** The
+endpoint is a brand new DNS name, and AWS publishes it a few minutes after the
+cluster reports ACTIVE. If your machine asked during that gap, its resolver
+cached the "no such name" answer and keeps returning it. Compare:
+
+```bash
+dig +short <endpoint-host>             # your resolver, empty while cached
+dig +short @8.8.8.8 <endpoint-host>    # public resolver, returns the IPs
+```
+
+If the public resolver answers and yours does not, wait a few minutes and try
+again. An `/etc/hosts` line with one of the IPs works as a stopgap, but remove
+it once your resolver catches up, because those IPs can change.
+
 **`kubectl` says Unauthorized.** You are not the identity that created the
 cluster. Check with `aws sts get-caller-identity`.
 
