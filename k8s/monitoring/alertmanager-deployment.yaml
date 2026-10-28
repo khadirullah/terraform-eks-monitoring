@@ -61,9 +61,10 @@ data:
     # When NodeNotReady is firing for a node, its HighCPUUsage and
     # HighMemoryUsage warnings say nothing new, so drop them. Both sides have to
     # agree on "instance", which NodeNotReady sets from the node name and the
-    # node-exporter scrape job sets the same way. PodCrashLooping has no
-    # instance label, so it inhibits nothing, which is right: a crashing pod is
-    # not a reason to hide a node's CPU.
+    # node-exporter scrape job sets the same way. PodCrashLooping carries
+    # instance="kube-state-metrics:8080" from its scrape target, which never
+    # matches a node name, so it inhibits nothing. That is right, because a
+    # crashing pod is not a reason to hide a node's CPU.
     inhibit_rules:
       - source_matchers:
           - severity = "critical"
