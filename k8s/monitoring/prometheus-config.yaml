@@ -197,14 +197,24 @@ data:
 
       - name: pod-alerts
         rules:
+          # Alert on the CrashLoopBackOff state, not on a restart count. The
+          # kubelet doubles the wait between restarts up to 5 minutes, so a pod
+          # that keeps crashing soon restarts only about 3 times in 15 minutes.
+          # A "restarts above 5 in 15m" rule fires early on and then clears
+          # while the pod is still broken.
+          #
+          # max_over_time bridges the few seconds of each restart, when the
+          # container is Running or Terminated instead of waiting. Without it
+          # every restart resets the 5m "for", and once the backoff reaches its
+          # 5 minute cap the state never lasts 5 unbroken minutes.
           - alert: PodCrashLooping
-            expr: increase(kube_pod_container_status_restarts_total[15m]) > 5
-            for: 0m
+            expr: max_over_time(kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff"}[5m]) >= 1
+            for: 5m
             labels:
               severity: critical
             annotations:
               summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash looping"
-              description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has restarted more than 5 times in the last 15 minutes."
+              description: "Container {{ $labels.container }} in pod {{ $labels.pod }} (namespace {{ $labels.namespace }}) has been in CrashLoopBackOff for more than 5 minutes."
 
           - alert: PersistentVolumeFull
             expr: kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes * 100 > 90

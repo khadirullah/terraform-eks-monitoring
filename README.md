@@ -70,7 +70,7 @@ The control plane is not in the diagram because AWS runs it. You never see those
 | Node Not Ready | Node status not Ready for 5m | Critical | kube-state-metrics |
 | High CPU Usage | Node CPU above 80% for 10m | Warning | node-exporter |
 | High Memory Usage | Node memory above 85% for 10m | Warning | node-exporter |
-| Pod Crash Looping | Pod restarts above 5 in 15m | Critical | kube-state-metrics |
+| Pod Crash Looping | Container in CrashLoopBackOff for 5m | Critical | kube-state-metrics |
 | Persistent Volume Full | PV usage above 90% | Warning | kubelet |
 
 Both exporters are deployed, so the first four rules have a live source. `Persistent Volume Full` is wired correctly but returns nothing until some workload claims a volume, and nothing in this stack does, since all storage is `emptyDir`.

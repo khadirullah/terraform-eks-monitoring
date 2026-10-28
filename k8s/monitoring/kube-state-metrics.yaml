@@ -31,8 +31,8 @@ metadata:
     app.kubernetes.io/name: kube-state-metrics
 rules:
   # nodes feeds kube_node_status_condition, which NodeNotReady queries.
-  # pods feeds kube_pod_container_status_restarts_total, which PodCrashLooping
-  # queries, plus the per-pod phase and resource-request series.
+  # pods feeds kube_pod_container_status_waiting_reason, which PodCrashLooping
+  # queries, plus the restart counts, per-pod phase and resource-request series.
   # namespaces gives kube_namespace_* and lets the pod metrics be grouped.
   - apiGroups: [""]
     resources:
