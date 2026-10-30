@@ -19,6 +19,11 @@ version current is a cost decision before it is a features one.
 tooling support is settled a release behind the newest, and this cluster exists
 to be understood rather than to be first.
 
+Staying behind is also on purpose for practice. Taking a running cluster up a
+minor version is a job of its own. The control plane goes first, then the node
+group and the add-ons, because EKS does not upgrade those with the control plane.
+Starting on 1.35 leaves two versions to practise that on.
+
 You cannot skip minor versions when upgrading, so the version you start on
 determines how many hops you need later. Going back down is limited too. EKS can
 roll an in-place upgrade back to the previous minor version, but only within 7
