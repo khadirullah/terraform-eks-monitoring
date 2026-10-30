@@ -19,8 +19,10 @@ version current is a cost decision before it is a features one.
 tooling support is settled a release behind the newest, and this cluster exists
 to be understood rather than to be first.
 
-You cannot skip minor versions when upgrading and you cannot go back down, so the
-version you start on determines how many hops you need later.
+You cannot skip minor versions when upgrading, so the version you start on
+determines how many hops you need later. Going back down is limited too. EKS can
+roll an in-place upgrade back to the previous minor version, but only within 7
+days of the upgrade.
 
 ### Upgrade policy `STANDARD`, not the `EXTENDED` default
 
