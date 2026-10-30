@@ -234,8 +234,9 @@ cluster. Check with `aws sts get-caller-identity`.
 
 **Grafana keeps restarting.** `kubectl describe pod -n monitoring -l
 app.kubernetes.io/name=grafana` and read Last State. `OOMKilled` means it hit
-its memory limit. `Error` with exit code 137 and "Liveness probe failed" in the
-events means it was too slow to answer `/api/health` and the kubelet killed it.
+its memory limit. "Liveness probe failed" followed by "failed liveness probe,
+will be restarted" in the events means it was too slow to answer `/api/health`
+and the kubelet restarted it.
 Both happened at a 512Mi limit, which is why the limit is now 1Gi. A restart
 also drops any `port-forward` to the old container, so start it again.
 
