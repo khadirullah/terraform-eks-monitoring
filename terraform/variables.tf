@@ -48,7 +48,7 @@ variable "public_subnet_cidrs" {
 
 # ── EKS Variables ──
 
-# EKS standard support currently covers 1.34, 1.35 and 1.36. A version older than
+# On 2026-10-30, EKS standard support covered 1.34 to 1.37. A version older than
 # that drops into extended support, which AWS bills at a higher hourly rate for the
 # control plane. The cluster's upgrade_policy in eks.tf is set to STANDARD, so AWS
 # upgrades it rather than billing extended support, but bumping this yourself

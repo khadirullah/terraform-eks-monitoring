@@ -8,14 +8,16 @@ a question about the project, this is the file.
 
 ### Kubernetes 1.35
 
-EKS standard support covers 1.34, 1.35 and 1.36. Anything below that window
-falls into extended support, where EKS bills the control plane at a much higher
-hourly rate, so keeping the version current is a cost decision before it is a
-features one.
+On 2026-10-30, EKS standard support covered 1.34, 1.35, 1.36 and 1.37. The list
+moves as new versions arrive, so check the
+[EKS version page](https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html)
+before you pick one. Anything below that window falls into extended support,
+where EKS bills the control plane at a much higher hourly rate, so keeping the
+version current is a cost decision before it is a features one.
 
-1.36 would also have been fine. 1.35 was chosen because addon and tooling support
-is settled a release behind the newest, and this cluster exists to be understood
-rather than to be first.
+1.36 or 1.37 would also have been fine. 1.35 was chosen because addon and
+tooling support is settled a release behind the newest, and this cluster exists
+to be understood rather than to be first.
 
 You cannot skip minor versions when upgrading and you cannot go back down, so the
 version you start on determines how many hops you need later.
