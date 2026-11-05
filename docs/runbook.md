@@ -163,7 +163,7 @@ Bring it back by rebooting the instance, which starts the kubelet again:
 aws ec2 reboot-instances --region <region> --instance-ids <instance-id>
 ```
 
-The node was Ready about 30 seconds after the reboot and the alert resolved
+The node was Ready less than a minute after the reboot and the alert resolved
 right after. Pods do not move back on their own.
 
 ## Upgrading the cluster
