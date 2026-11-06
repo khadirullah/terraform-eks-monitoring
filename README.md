@@ -192,6 +192,8 @@ One NAT gateway, not one per availability zone. Cheaper, and a single point of f
 
 Local Terraform state, no S3 backend and no locking. Fine for one person, wrong for a team.
 
+No Pod Security labels and no control plane audit logs. Anyone with cluster admin can get `root` on a node with `kubectl debug`, and nothing in AWS records it. Production labels each namespace with a Pod Security level and turns on the `audit` log type.
+
 No ingress and no load balancers. Grafana, Prometheus and Alertmanager are reached with `port-forward`.
 
 No provisioned dashboards. Grafana starts with the Prometheus data source wired up and an empty dashboard list, so graphs come from Explore. Importing a community dashboard such as Node Exporter Full (ID 1860) takes a minute, but it lives in `emptyDir` and is gone after the next pod restart.
