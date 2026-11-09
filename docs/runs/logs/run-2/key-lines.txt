@@ -1,0 +1,122 @@
+Key lines from run 2, 2026-10-28. Times are UTC.
+
+=== deploy.sh, Step 1 plan, before anything was created ===
+      + upgrade_policy {
+          + support_type = "STANDARD"
+
+=== deploy.sh, Step 1 apply ===
+Apply complete! Resources: 28 added, 0 changed, 0 destroyed.
+
+=== deploy.sh, Steps 3 and 4, no DNS error this time ===
+[->] Step 3/4: Deploying monitoring stack to Kubernetes...
+[ok] Monitoring stack deployed
+[->] Step 4/4: Waiting for pods to be ready...
+[ok] All monitoring pods are running
+
+Deployment complete.
+[ble: elapsed 821.519s (CPU 1.9%)] ./scripts/deploy.sh
+
+=== aws eks describe-cluster, 18:37 ===
+{
+    "status": "ACTIVE",
+    "version": "1.35",
+    "upgradePolicy": {
+        "supportType": "STANDARD"
+    }
+}
+
+=== kubectl get pods -n monitoring, 18:37 ===
+NAME                                 READY   STATUS    RESTARTS   AGE     IP           NODE
+alertmanager-5bfd595d48-nsxt9        1/1     Running   0          2m58s   10.0.1.235   ip-10-0-1-6.ec2.internal
+grafana-6766765b9f-7xnlh             1/1     Running   0          2m55s   10.0.1.169   ip-10-0-1-6.ec2.internal
+kube-state-metrics-9ffdd88d8-l5wbl   1/1     Running   0          2m51s   10.0.2.106   ip-10-0-2-182.ec2.internal
+node-exporter-6ccwc                  1/1     Running   0          2m49s   10.0.2.182   ip-10-0-2-182.ec2.internal
+node-exporter-mm8v8                  1/1     Running   0          2m49s   10.0.1.6     ip-10-0-1-6.ec2.internal
+prometheus-7ff56f6d84-c4chk          1/1     Running   0          2m45s   10.0.2.10    ip-10-0-2-182.ec2.internal
+
+=== Grafana resources, 18:37 ===
+{"limits":{"cpu":"250m","memory":"1Gi"},"requests":{"cpu":"100m","memory":"384Mi"}}
+
+=== kubectl run crashtest ===
+pod/crashtest created
+crashtest started 18:38:06 UTC
+
+=== Watch loop, once a minute: PodCrashLooping state, crashtest restarts and reason, Grafana restarts ===
+18:38:31 alert=inactive crashtest=[2 ] grafana_restarts=0
+18:39:35 alert=pending crashtest=[4 ] grafana_restarts=0
+18:40:39 alert=pending crashtest=[4 ] grafana_restarts=0
+18:41:43 alert=pending crashtest=[5 ] grafana_restarts=0
+18:42:47 alert=pending crashtest=[5 CrashLoopBackOff] grafana_restarts=0
+18:43:51 alert=firing crashtest=[6 ] grafana_restarts=0
+18:44:56 alert=firing crashtest=[6 CrashLoopBackOff] grafana_restarts=0
+18:46:00 alert=firing crashtest=[6 CrashLoopBackOff] grafana_restarts=0
+18:47:07 alert=firing crashtest=[6 CrashLoopBackOff] grafana_restarts=0
+18:48:12 alert=firing crashtest=[6 CrashLoopBackOff] grafana_restarts=0
+18:49:16 alert=firing crashtest=[7 ] grafana_restarts=0
+18:50:20 alert=firing crashtest=[7 CrashLoopBackOff] grafana_restarts=0
+18:51:24 alert=firing crashtest=[7 CrashLoopBackOff] grafana_restarts=0
+18:52:28 alert=firing crashtest=[7 CrashLoopBackOff] grafana_restarts=0
+18:53:33 alert=firing crashtest=[7 CrashLoopBackOff] grafana_restarts=0
+18:54:37 alert=firing crashtest=[8 ] grafana_restarts=0
+18:55:41 alert=firing crashtest=[8 CrashLoopBackOff] grafana_restarts=0
+18:56:45 alert=firing crashtest=[8 CrashLoopBackOff] grafana_restarts=0
+18:57:49 alert=firing crashtest=[8 CrashLoopBackOff] grafana_restarts=0
+18:58:53 alert=firing crashtest=[9 ] grafana_restarts=0
+18:59:57 alert=firing crashtest=[9 ] grafana_restarts=0
+19:01:02 alert=firing crashtest=[9 CrashLoopBackOff] grafana_restarts=0
+19:02:05 alert=firing crashtest=[9 CrashLoopBackOff] grafana_restarts=0
+19:03:09 alert=firing crashtest=[9 CrashLoopBackOff] grafana_restarts=0
+19:04:14 alert=firing crashtest=[10 ] grafana_restarts=0
+19:05:18 alert=firing crashtest=[10 CrashLoopBackOff] grafana_restarts=0
+
+=== Grafana memory peak over the last 15 minutes, 18:40 ===
+grafana peak MiB 610
+
+=== CrashLoopBackOff series for crashtest, 19:09, gaps longer than 15 s ===
+raw kube_pod_container_status_waiting_reason:
+86 points 18:38:56 to 19:08:56 values ['1'] gaps [('18:38:56', 210), ('18:43:41', 75), ('18:48:41', 75), ('18:53:41', 75), ('18:58:56', 90), ('19:03:56', 90)]
+max_over_time(...[5m]), the expression PodCrashLooping uses:
+122 points 18:38:56 to 19:09:11 values ['1'] gaps []
+
+=== Prometheus alerts, 19:13 ===
+PodCrashLooping firing 2026-10-28T18:38:45.356815395Z
+19:13:42
+
+=== destroy.sh, Step 2 plan ===
+      - upgrade_policy {
+          - support_type = "STANDARD" -> null
+
+=== destroy.sh, end ===
+Destroy complete! Resources: 28 destroyed.
+[->] Step 3/3: Checking for orphaned resources that still cost money
+
+[ok] Nothing orphaned in us-east-1.
+[ble: elapsed 407.106s (CPU 3.3%)] ./scripts/destroy.sh 
+
+=== AWS CLI check after the destroy, 19:28 ===
+Each line asks AWS for one kind of resource. An empty value means none is left.
+
+R="--region us-east-1 --output text"
+echo "eks: $(aws eks list-clusters $R --query 'clusters')"
+echo "instances not terminated: $(aws ec2 describe-instances $R --filters Name=instance-state-name,Values=pending,running,stopping,stopped,shutting-down --query 'Reservations[].Instances[].InstanceId')"
+echo "nat: $(aws ec2 describe-nat-gateways $R --filter Name=state,Values=pending,available,deleting --query 'NatGateways[].NatGatewayId')"
+echo "eips: $(aws ec2 describe-addresses $R --query 'Addresses[].PublicIp')"
+echo "vpcs tagged: $(aws ec2 describe-vpcs $R --filters Name=tag:Project,Values=eks-monitoring --query 'Vpcs[].VpcId')"
+echo "volumes: $(aws ec2 describe-volumes $R --query 'Volumes[].VolumeId')"
+echo "elbv2: $(aws elbv2 describe-load-balancers $R --query 'LoadBalancers[].LoadBalancerName')"
+echo "elb: $(aws elb describe-load-balancers $R --query 'LoadBalancerDescriptions[].LoadBalancerName')"
+echo "iam roles: $(aws iam list-roles --output text --query "Roles[?starts_with(RoleName,'eks-monitoring')].RoleName")"
+echo "oidc: $(aws iam list-open-id-connect-providers --output text --query 'OpenIDConnectProviderList[].Arn')"
+echo "log groups: $(aws logs describe-log-groups $R --log-group-name-prefix /aws/eks --query 'logGroups[].logGroupName')"
+
+eks: 
+instances not terminated: 
+nat: 
+eips: 
+vpcs tagged: 
+volumes: 
+elbv2: 
+elb: 
+iam roles: 
+oidc: 
+log groups:

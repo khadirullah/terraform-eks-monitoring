@@ -1,0 +1,835 @@
+
+This destroys the EKS cluster, the node group, the NAT gateway and the VPC.
+Cluster: eks-monitoring
+Region:  us-east-1
+
+[->] Step 1/3: Removing Kubernetes resources that hold AWS load balancers
+[!] LoadBalancer services found, deleting them first:
+lbtest/nginx
+service "nginx" deleted from lbtest namespace
+[->] Waiting 45s for AWS to release the load balancers
+namespace "monitoring" deleted
+[ok] Kubernetes resources removed
+[->] Step 2/3: terraform destroy
+aws_iam_role.eks_cluster: Refreshing state... [id=eks-monitoring-cluster-role]
+aws_vpc.main: Refreshing state... [id=vpc-0a63248847fed82ad]
+aws_iam_role.eks_nodes: Refreshing state... [id=eks-monitoring-node-role]
+aws_iam_role_policy_attachment.eks_worker_node_policy: Refreshing state... [id=eks-monitoring-node-role-20261109122837509400000003]
+aws_iam_role_policy_attachment.eks_cni_policy: Refreshing state... [id=eks-monitoring-node-role-20261109122837874600000005]
+aws_iam_role_policy_attachment.ecr_read_only: Refreshing state... [id=eks-monitoring-node-role-20261109122837140200000001]
+aws_iam_role_policy_attachment.eks_cluster_policy: Refreshing state... [id=eks-monitoring-cluster-role-20261109122837174300000002]
+aws_iam_role_policy_attachment.eks_vpc_resource_controller: Refreshing state... [id=eks-monitoring-cluster-role-20261109122837581500000004]
+aws_subnet.private[0]: Refreshing state... [id=subnet-0bd33d5d9d1b28b77]
+aws_subnet.private[1]: Refreshing state... [id=subnet-0aa2fd6b14b262fc5]
+aws_security_group.eks_cluster: Refreshing state... [id=sg-0b77a7d0e2203d7c5]
+aws_subnet.public[0]: Refreshing state... [id=subnet-032c9adcb95cba2a2]
+aws_subnet.public[1]: Refreshing state... [id=subnet-0bcb608e2a1dabef0]
+aws_internet_gateway.main: Refreshing state... [id=igw-00986dfe2b8cdcffc]
+aws_eip.nat: Refreshing state... [id=eipalloc-0096c3b41b447331b]
+aws_route_table.public: Refreshing state... [id=rtb-0c105e8be32af6c05]
+aws_eks_cluster.main: Refreshing state... [id=eks-monitoring]
+aws_route_table_association.public[0]: Refreshing state... [id=rtbassoc-0bc45ddd2a557432f]
+aws_route_table_association.public[1]: Refreshing state... [id=rtbassoc-0474ef0c81b81e035]
+aws_nat_gateway.main: Refreshing state... [id=nat-0f1015621605ef7aa]
+aws_eks_node_group.main: Refreshing state... [id=eks-monitoring:eks-monitoring-nodes]
+data.tls_certificate.eks_oidc: Reading...
+aws_eks_addon.vpc_cni: Refreshing state... [id=eks-monitoring:vpc-cni]
+aws_eks_addon.kube_proxy: Refreshing state... [id=eks-monitoring:kube-proxy]
+aws_route_table.private: Refreshing state... [id=rtb-03935a03e333f1ab7]
+aws_route_table_association.private[0]: Refreshing state... [id=rtbassoc-0fa5d29b52267df57]
+aws_route_table_association.private[1]: Refreshing state... [id=rtbassoc-09959da2eaed5aafd]
+aws_eks_addon.coredns: Refreshing state... [id=eks-monitoring:coredns]
+data.tls_certificate.eks_oidc: Read complete after 1s [id=b1b539daa206035ae3c3e28288b0681fa1b462f3]
+aws_iam_openid_connect_provider.eks: Refreshing state... [id=arn:aws:iam::<account-id>:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/<cluster-id>]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  - destroy
+
+Terraform will perform the following actions:
+
+  # aws_eip.nat will be destroyed
+  - resource "aws_eip" "nat" {
+      - allocation_id            = "eipalloc-0096c3b41b447331b" -> null
+      - arn                      = "arn:aws:ec2:us-east-1:<account-id>:elastic-ip/eipalloc-0096c3b41b447331b" -> null
+      - association_id           = "eipassoc-0501e6608eb79d288" -> null
+      - domain                   = "vpc" -> null
+      - id                       = "eipalloc-0096c3b41b447331b" -> null
+      - network_border_group     = "us-east-1" -> null
+      - network_interface        = "eni-04b63898acf5f3291" -> null
+      - private_dns              = "ip-10-0-101-55.ec2.internal" -> null
+      - private_ip               = "10.0.101.55" -> null
+      - public_dns               = "ec2-184-195-85-195.compute-1.amazonaws.com" -> null
+      - public_ip                = "<public-ip>" -> null
+      - public_ipv4_pool         = "amazon" -> null
+      - tags                     = {
+          - "Name" = "eks-monitoring-nat-eip"
+        } -> null
+      - tags_all                 = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "eks-monitoring-nat-eip"
+          - "Project"     = "eks-monitoring"
+        } -> null
+      - vpc                      = true -> null
+        # (5 unchanged attributes hidden)
+    }
+
+  # aws_eks_addon.coredns will be destroyed
+  - resource "aws_eks_addon" "coredns" {
+      - addon_name                  = "coredns" -> null
+      - addon_version               = "v1.13.2-eksbuild.68" -> null
+      - arn                         = "arn:aws:eks:us-east-1:<account-id>:addon/eks-monitoring/coredns/ced0e029-fd94-72db-6f1f-eee8ad5e8cf8" -> null
+      - cluster_name                = "eks-monitoring" -> null
+      - created_at                  = "2026-11-09T12:41:31Z" -> null
+      - id                          = "eks-monitoring:coredns" -> null
+      - modified_at                 = "2026-11-09T12:41:43Z" -> null
+      - resolve_conflicts_on_create = "OVERWRITE" -> null
+      - tags                        = {
+          - "Name" = "eks-monitoring-coredns"
+        } -> null
+      - tags_all                    = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "eks-monitoring-coredns"
+          - "Project"     = "eks-monitoring"
+        } -> null
+        # (2 unchanged attributes hidden)
+    }
+
+  # aws_eks_addon.kube_proxy will be destroyed
+  - resource "aws_eks_addon" "kube_proxy" {
+      - addon_name                  = "kube-proxy" -> null
+      - addon_version               = "v1.35.3-eksbuild.64" -> null
+      - arn                         = "arn:aws:eks:us-east-1:<account-id>:addon/eks-monitoring/kube-proxy/9ed0e029-24f7-430d-912e-cbff7ac1d480" -> null
+      - cluster_name                = "eks-monitoring" -> null
+      - created_at                  = "2026-11-09T12:39:41Z" -> null
+      - id                          = "eks-monitoring:kube-proxy" -> null
+      - modified_at                 = "2026-11-09T12:39:57Z" -> null
+      - resolve_conflicts_on_create = "OVERWRITE" -> null
+      - tags                        = {
+          - "Name" = "eks-monitoring-kube-proxy"
+        } -> null
+      - tags_all                    = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "eks-monitoring-kube-proxy"
+          - "Project"     = "eks-monitoring"
+        } -> null
+        # (2 unchanged attributes hidden)
+    }
+
+  # aws_eks_addon.vpc_cni will be destroyed
+  - resource "aws_eks_addon" "vpc_cni" {
+      - addon_name                  = "vpc-cni" -> null
+      - addon_version               = "v1.22.4-eksbuild.10" -> null
+      - arn                         = "arn:aws:eks:us-east-1:<account-id>:addon/eks-monitoring/vpc-cni/02d0e029-24f6-66a7-3201-847ce9151bd5" -> null
+      - cluster_name                = "eks-monitoring" -> null
+      - created_at                  = "2026-11-09T12:39:40Z" -> null
+      - id                          = "eks-monitoring:vpc-cni" -> null
+      - modified_at                 = "2026-11-09T12:39:47Z" -> null
+      - resolve_conflicts_on_create = "OVERWRITE" -> null
+      - tags                        = {
+          - "Name" = "eks-monitoring-vpc-cni"
+        } -> null
+      - tags_all                    = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "eks-monitoring-vpc-cni"
+          - "Project"     = "eks-monitoring"
+        } -> null
+        # (2 unchanged attributes hidden)
+    }
+
+  # aws_eks_cluster.main will be destroyed
+  - resource "aws_eks_cluster" "main" {
+      - arn                           = "arn:aws:eks:us-east-1:<account-id>:cluster/eks-monitoring" -> null
+      - bootstrap_self_managed_addons = true -> null
+      - certificate_authority         = [
+          - {
+              - data = "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURNVENDQWhtZ0F3SUJBZ0lRS21wdzNaUFZNbUZiVXlGbG5yS1N0REFOQmdrcWhraUc5dzBCQVFzRkFEQW4KTVJBd0RnWURWUVFLRXdkQlYxTWdSVXRUTVJNd0VRWURWUVFERXdwcmRXSmxjbTVsZEdWek1CNFhEVEkyTVRFdwpPVEV5TWpreE4xb1hEVE14TVRFd09ERXlNamt4TjFvd0p6RVFNQTRHQTFVRUNoTUhRVmRUSUVWTFV6RVRNQkVHCkExVUVBeE1LYTNWaVpYSnVaWFJsY3pDQ0FTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUIKQU9ZOHhhNTNCUVdkNmY3TlFOVHZZa3dhWlJ2Y2hkVmd3SEpqcXlGYjBEOFdpNFdZVW9NS2tmd2RnSHdEeTlEWApDdmtFM016MmZkQWl6TU9FMXNnakh3VEt6cldPRTBQb2RQWmlxMDFjNUh0ODRyZ1VQMEpiVm1DY3kzeHdXYkF6CllhTS9TSGdBb2szY3JaU2VBWGJIZkF3TjF2ZWtGR2RHZDRTSHM2K0VLa1FUNEZVQm04TkV5am1Wbys3bTFwc20KamlFdkMrT2JXL2I5bFJHbkFnQ082V3RLaTUxSW5FVUlhdVYvUmdkVkRLc2Y5SGQvdWR1ZWZQcDVFSWhXRUt5ZQoycnZ6UEpXdUdlRGE2NzBQbVhlbW5vb2NqRnQwM2k4OUh2ZkQzWWNHVSsrVjU2eUhUdk1USFViTHQwODIvbWgrClVrbVRlRUVWbDlHQk40NmtJTmdWNWxFQ0F3RUFBYU5aTUZjd0RnWURWUjBQQVFIL0JBUURBZ0trTUE4R0ExVWQKRXdFQi93UUZNQU1CQWY4d0hRWURWUjBPQkJZRUZJMm5JTDhreHNtc2FSdnl5ZU1KYUxvakRpU05NQlVHQTFVZApFUVFPTUF5Q0NtdDFZbVZ5Ym1WMFpYTXdEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBSk9HTng3dG9YWG5KWENMClZ3ZHdiQTdDRUZrYnAxdDNZNFkvajdhUXJsSHVhYTlNazNYa3ZSaFEwdWdlMk5pZ1JGRmsyZDQ2bWRLY3MrTzEKQmpuTkUwb0RiWEJEVEd6MENvckRzclNXL3cyU214bDRQSUx2MGxkWHlQdlVUUXljZ2lHUVRuZzZyOU1iYVhOMApCTmxEVkpiOXN2RURKNWdKbTJUNWJoakFzdVFJd2N0MGd2RlRJdEZaM2ZwZlhZOStXOEdyMVBkU0loU0RmVE9pCkVpUEtXeHBxZW1xY3pRMGpXUkZYQ3FnU3RHejhKVW1uditUMXR0TWFlRlJHZDlTSm5ZNmx4dVBKTmQyejkrVGYKVW9TdzJ1TDJ6d3hlSDR0dmZvaXJsUStlZkNxM29KUzFSZkpxcWw5WjBScG1NcVlBVlNpNENiL0VjSUw1MmlNMAp4ZTMrTnZnPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg=="
+            },
+        ] -> null
+      - created_at                    = "2026-11-09T12:29:09Z" -> null
+      - enabled_cluster_log_types     = [] -> null
+      - endpoint                      = "https://<cluster-id>.gr7.us-east-1.eks.amazonaws.com" -> null
+      - id                            = "eks-monitoring" -> null
+      - identity                      = [
+          - {
+              - oidc = [
+                  - {
+                      - issuer = "https://oidc.eks.us-east-1.amazonaws.com/id/<cluster-id>"
+                    },
+                ]
+            },
+        ] -> null
+      - name                          = "eks-monitoring" -> null
+      - platform_version              = "eks.27" -> null
+      - role_arn                      = "arn:aws:iam::<account-id>:role/eks-monitoring-cluster-role" -> null
+      - status                        = "ACTIVE" -> null
+      - tags                          = {} -> null
+      - tags_all                      = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "eks-monitoring"
+        } -> null
+      - version                       = "1.35" -> null
+
+      - access_config {
+          - authentication_mode                         = "API_AND_CONFIG_MAP" -> null
+          - bootstrap_cluster_creator_admin_permissions = true -> null
+        }
+
+      - kubernetes_network_config {
+          - ip_family         = "ipv4" -> null
+          - service_ipv4_cidr = "172.20.0.0/16" -> null
+            # (1 unchanged attribute hidden)
+
+          - elastic_load_balancing {
+              - enabled = false -> null
+            }
+        }
+
+      - upgrade_policy {
+          - support_type = "STANDARD" -> null
+        }
+
+      - vpc_config {
+          - cluster_security_group_id = "sg-037bed86a4ddddaef" -> null
+          - endpoint_private_access   = true -> null
+          - endpoint_public_access    = true -> null
+          - public_access_cidrs       = [
+              - "0.0.0.0/0",
+            ] -> null
+          - security_group_ids        = [
+              - "sg-0b77a7d0e2203d7c5",
+            ] -> null
+          - subnet_ids                = [
+              - "subnet-032c9adcb95cba2a2",
+              - "subnet-0aa2fd6b14b262fc5",
+              - "subnet-0bcb608e2a1dabef0",
+              - "subnet-0bd33d5d9d1b28b77",
+            ] -> null
+          - vpc_id                    = "vpc-0a63248847fed82ad" -> null
+        }
+    }
+
+  # aws_eks_node_group.main will be destroyed
+  - resource "aws_eks_node_group" "main" {
+      - ami_type               = "AL2023_x86_64_STANDARD" -> null
+      - arn                    = "arn:aws:eks:us-east-1:<account-id>:nodegroup/eks-monitoring/eks-monitoring-nodes/d4d0e029-24fa-dde1-9664-30039017e771" -> null
+      - capacity_type          = "ON_DEMAND" -> null
+      - cluster_name           = "eks-monitoring" -> null
+      - disk_size              = 20 -> null
+      - id                     = "eks-monitoring:eks-monitoring-nodes" -> null
+      - instance_types         = [
+          - "t3.small",
+        ] -> null
+      - labels                 = {
+          - "environment" = "dev"
+          - "role"        = "worker"
+        } -> null
+      - node_group_name        = "eks-monitoring-nodes" -> null
+      - node_role_arn          = "arn:aws:iam::<account-id>:role/eks-monitoring-node-role" -> null
+      - release_version        = "1.35.9-20261031" -> null
+      - resources              = [
+          - {
+              - autoscaling_groups              = [
+                  - {
+                      - name = "eks-eks-monitoring-nodes-d4d0e029-24fa-dde1-9664-30039017e771"
+                    },
+                ]
+                # (1 unchanged attribute hidden)
+            },
+        ] -> null
+      - status                 = "ACTIVE" -> null
+      - subnet_ids             = [
+          - "subnet-0aa2fd6b14b262fc5",
+          - "subnet-0bd33d5d9d1b28b77",
+        ] -> null
+      - tags                   = {
+          - "Name" = "eks-monitoring-node"
+        } -> null
+      - tags_all               = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "eks-monitoring-node"
+          - "Project"     = "eks-monitoring"
+        } -> null
+      - version                = "1.35" -> null
+        # (1 unchanged attribute hidden)
+
+      - scaling_config {
+          - desired_size = 2 -> null
+          - max_size     = 2 -> null
+          - min_size     = 1 -> null
+        }
+
+      - update_config {
+          - max_unavailable            = 1 -> null
+          - max_unavailable_percentage = 0 -> null
+        }
+    }
+
+  # aws_iam_openid_connect_provider.eks will be destroyed
+  - resource "aws_iam_openid_connect_provider" "eks" {
+      - arn             = "arn:aws:iam::<account-id>:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/<cluster-id>" -> null
+      - client_id_list  = [
+          - "sts.amazonaws.com",
+        ] -> null
+      - id              = "arn:aws:iam::<account-id>:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/<cluster-id>" -> null
+      - tags            = {
+          - "Name" = "eks-monitoring-oidc"
+        } -> null
+      - tags_all        = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "eks-monitoring-oidc"
+          - "Project"     = "eks-monitoring"
+        } -> null
+      - thumbprint_list = [
+          - "06b25927c42a721631c1efd9431e648fa62e1e39",
+        ] -> null
+      - url             = "oidc.eks.us-east-1.amazonaws.com/id/<cluster-id>" -> null
+    }
+
+  # aws_iam_role.eks_cluster will be destroyed
+  - resource "aws_iam_role" "eks_cluster" {
+      - arn                   = "arn:aws:iam::<account-id>:role/eks-monitoring-cluster-role" -> null
+      - assume_role_policy    = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action    = "sts:AssumeRole"
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - Service = "eks.amazonaws.com"
+                        }
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - create_date           = "2026-11-09T12:28:35Z" -> null
+      - force_detach_policies = false -> null
+      - id                    = "eks-monitoring-cluster-role" -> null
+      - managed_policy_arns   = [
+          - "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy",
+          - "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController",
+        ] -> null
+      - max_session_duration  = 3600 -> null
+      - name                  = "eks-monitoring-cluster-role" -> null
+      - path                  = "/" -> null
+      - tags                  = {} -> null
+      - tags_all              = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "eks-monitoring"
+        } -> null
+      - unique_id             = "AROAYRBQ7L5CKWNURA5IB" -> null
+        # (3 unchanged attributes hidden)
+    }
+
+  # aws_iam_role.eks_nodes will be destroyed
+  - resource "aws_iam_role" "eks_nodes" {
+      - arn                   = "arn:aws:iam::<account-id>:role/eks-monitoring-node-role" -> null
+      - assume_role_policy    = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action    = "sts:AssumeRole"
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - Service = "ec2.amazonaws.com"
+                        }
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - create_date           = "2026-11-09T12:28:35Z" -> null
+      - force_detach_policies = false -> null
+      - id                    = "eks-monitoring-node-role" -> null
+      - managed_policy_arns   = [
+          - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+          - "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+          - "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
+        ] -> null
+      - max_session_duration  = 3600 -> null
+      - name                  = "eks-monitoring-node-role" -> null
+      - path                  = "/" -> null
+      - tags                  = {} -> null
+      - tags_all              = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "eks-monitoring"
+        } -> null
+      - unique_id             = "AROAYRBQ7L5CKV3SMVBLU" -> null
+        # (3 unchanged attributes hidden)
+    }
+
+  # aws_iam_role_policy_attachment.ecr_read_only will be destroyed
+  - resource "aws_iam_role_policy_attachment" "ecr_read_only" {
+      - id         = "eks-monitoring-node-role-20261109122837140200000001" -> null
+      - policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly" -> null
+      - role       = "eks-monitoring-node-role" -> null
+    }
+
+  # aws_iam_role_policy_attachment.eks_cluster_policy will be destroyed
+  - resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
+      - id         = "eks-monitoring-cluster-role-20261109122837174300000002" -> null
+      - policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy" -> null
+      - role       = "eks-monitoring-cluster-role" -> null
+    }
+
+  # aws_iam_role_policy_attachment.eks_cni_policy will be destroyed
+  - resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
+      - id         = "eks-monitoring-node-role-20261109122837874600000005" -> null
+      - policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy" -> null
+      - role       = "eks-monitoring-node-role" -> null
+    }
+
+  # aws_iam_role_policy_attachment.eks_vpc_resource_controller will be destroyed
+  - resource "aws_iam_role_policy_attachment" "eks_vpc_resource_controller" {
+      - id         = "eks-monitoring-cluster-role-20261109122837581500000004" -> null
+      - policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController" -> null
+      - role       = "eks-monitoring-cluster-role" -> null
+    }
+
+  # aws_iam_role_policy_attachment.eks_worker_node_policy will be destroyed
+  - resource "aws_iam_role_policy_attachment" "eks_worker_node_policy" {
+      - id         = "eks-monitoring-node-role-20261109122837509400000003" -> null
+      - policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy" -> null
+      - role       = "eks-monitoring-node-role" -> null
+    }
+
+  # aws_internet_gateway.main will be destroyed
+  - resource "aws_internet_gateway" "main" {
+      - arn      = "arn:aws:ec2:us-east-1:<account-id>:internet-gateway/igw-00986dfe2b8cdcffc" -> null
+      - id       = "igw-00986dfe2b8cdcffc" -> null
+      - owner_id = "<account-id>" -> null
+      - tags     = {
+          - "Name" = "eks-monitoring-igw"
+        } -> null
+      - tags_all = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "eks-monitoring-igw"
+          - "Project"     = "eks-monitoring"
+        } -> null
+      - vpc_id   = "vpc-0a63248847fed82ad" -> null
+    }
+
+  # aws_nat_gateway.main will be destroyed
+  - resource "aws_nat_gateway" "main" {
+      - allocation_id                      = "eipalloc-0096c3b41b447331b" -> null
+      - association_id                     = "eipassoc-0501e6608eb79d288" -> null
+      - connectivity_type                  = "public" -> null
+      - id                                 = "nat-0f1015621605ef7aa" -> null
+      - network_interface_id               = "eni-04b63898acf5f3291" -> null
+      - private_ip                         = "10.0.101.55" -> null
+      - public_ip                          = "<public-ip>" -> null
+      - secondary_allocation_ids           = [] -> null
+      - secondary_private_ip_address_count = 0 -> null
+      - secondary_private_ip_addresses     = [] -> null
+      - subnet_id                          = "subnet-032c9adcb95cba2a2" -> null
+      - tags                               = {
+          - "Name" = "eks-monitoring-nat"
+        } -> null
+      - tags_all                           = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "eks-monitoring-nat"
+          - "Project"     = "eks-monitoring"
+        } -> null
+    }
+
+  # aws_route_table.private will be destroyed
+  - resource "aws_route_table" "private" {
+      - arn              = "arn:aws:ec2:us-east-1:<account-id>:route-table/rtb-03935a03e333f1ab7" -> null
+      - id               = "rtb-03935a03e333f1ab7" -> null
+      - owner_id         = "<account-id>" -> null
+      - propagating_vgws = [] -> null
+      - route            = [
+          - {
+              - cidr_block                 = "0.0.0.0/0"
+              - nat_gateway_id             = "nat-0f1015621605ef7aa"
+                # (11 unchanged attributes hidden)
+            },
+        ] -> null
+      - tags             = {
+          - "Name" = "eks-monitoring-private-rt"
+        } -> null
+      - tags_all         = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "eks-monitoring-private-rt"
+          - "Project"     = "eks-monitoring"
+        } -> null
+      - vpc_id           = "vpc-0a63248847fed82ad" -> null
+    }
+
+  # aws_route_table.public will be destroyed
+  - resource "aws_route_table" "public" {
+      - arn              = "arn:aws:ec2:us-east-1:<account-id>:route-table/rtb-0c105e8be32af6c05" -> null
+      - id               = "rtb-0c105e8be32af6c05" -> null
+      - owner_id         = "<account-id>" -> null
+      - propagating_vgws = [] -> null
+      - route            = [
+          - {
+              - cidr_block                 = "0.0.0.0/0"
+              - gateway_id                 = "igw-00986dfe2b8cdcffc"
+                # (11 unchanged attributes hidden)
+            },
+        ] -> null
+      - tags             = {
+          - "Name" = "eks-monitoring-public-rt"
+        } -> null
+      - tags_all         = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "eks-monitoring-public-rt"
+          - "Project"     = "eks-monitoring"
+        } -> null
+      - vpc_id           = "vpc-0a63248847fed82ad" -> null
+    }
+
+  # aws_route_table_association.private[0] will be destroyed
+  - resource "aws_route_table_association" "private" {
+      - id             = "rtbassoc-0fa5d29b52267df57" -> null
+      - route_table_id = "rtb-03935a03e333f1ab7" -> null
+      - subnet_id      = "subnet-0bd33d5d9d1b28b77" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_route_table_association.private[1] will be destroyed
+  - resource "aws_route_table_association" "private" {
+      - id             = "rtbassoc-09959da2eaed5aafd" -> null
+      - route_table_id = "rtb-03935a03e333f1ab7" -> null
+      - subnet_id      = "subnet-0aa2fd6b14b262fc5" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_route_table_association.public[0] will be destroyed
+  - resource "aws_route_table_association" "public" {
+      - id             = "rtbassoc-0bc45ddd2a557432f" -> null
+      - route_table_id = "rtb-0c105e8be32af6c05" -> null
+      - subnet_id      = "subnet-032c9adcb95cba2a2" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_route_table_association.public[1] will be destroyed
+  - resource "aws_route_table_association" "public" {
+      - id             = "rtbassoc-0474ef0c81b81e035" -> null
+      - route_table_id = "rtb-0c105e8be32af6c05" -> null
+      - subnet_id      = "subnet-0bcb608e2a1dabef0" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_security_group.eks_cluster will be destroyed
+  - resource "aws_security_group" "eks_cluster" {
+      - arn                    = "arn:aws:ec2:us-east-1:<account-id>:security-group/sg-0b77a7d0e2203d7c5" -> null
+      - description            = "Security group for EKS cluster control plane" -> null
+      - egress                 = [
+          - {
+              - cidr_blocks      = [
+                  - "0.0.0.0/0",
+                ]
+              - description      = "Allow all outbound traffic"
+              - from_port        = 0
+              - ipv6_cidr_blocks = []
+              - prefix_list_ids  = []
+              - protocol         = "-1"
+              - security_groups  = []
+              - self             = false
+              - to_port          = 0
+            },
+        ] -> null
+      - id                     = "sg-0b77a7d0e2203d7c5" -> null
+      - ingress                = [
+          - {
+              - cidr_blocks      = [
+                  - "10.0.0.0/16",
+                ]
+              - description      = "Allow HTTPS from VPC"
+              - from_port        = 443
+              - ipv6_cidr_blocks = []
+              - prefix_list_ids  = []
+              - protocol         = "tcp"
+              - security_groups  = []
+              - self             = false
+              - to_port          = 443
+            },
+        ] -> null
+      - name                   = "eks-monitoring-cluster-20261109122850294900000006" -> null
+      - name_prefix            = "eks-monitoring-cluster-" -> null
+      - owner_id               = "<account-id>" -> null
+      - revoke_rules_on_delete = false -> null
+      - tags                   = {
+          - "Name" = "eks-monitoring-cluster-sg"
+        } -> null
+      - tags_all               = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "eks-monitoring-cluster-sg"
+          - "Project"     = "eks-monitoring"
+        } -> null
+      - vpc_id                 = "vpc-0a63248847fed82ad" -> null
+    }
+
+  # aws_subnet.private[0] will be destroyed
+  - resource "aws_subnet" "private" {
+      - arn                                            = "arn:aws:ec2:us-east-1:<account-id>:subnet/subnet-0bd33d5d9d1b28b77" -> null
+      - assign_ipv6_address_on_creation                = false -> null
+      - availability_zone                              = "us-east-1a" -> null
+      - availability_zone_id                           = "use1-az4" -> null
+      - cidr_block                                     = "10.0.1.0/24" -> null
+      - enable_dns64                                   = false -> null
+      - enable_lni_at_device_index                     = 0 -> null
+      - enable_resource_name_dns_a_record_on_launch    = false -> null
+      - enable_resource_name_dns_aaaa_record_on_launch = false -> null
+      - id                                             = "subnet-0bd33d5d9d1b28b77" -> null
+      - ipv6_native                                    = false -> null
+      - map_customer_owned_ip_on_launch                = false -> null
+      - map_public_ip_on_launch                        = false -> null
+      - owner_id                                       = "<account-id>" -> null
+      - private_dns_hostname_type_on_launch            = "ip-name" -> null
+      - tags                                           = {
+          - "Name"                                 = "eks-monitoring-private-us-east-1a"
+          - "kubernetes.io/cluster/eks-monitoring" = "shared"
+          - "kubernetes.io/role/internal-elb"      = "1"
+        } -> null
+      - tags_all                                       = {
+          - "Environment"                          = "dev"
+          - "ManagedBy"                            = "terraform"
+          - "Name"                                 = "eks-monitoring-private-us-east-1a"
+          - "Project"                              = "eks-monitoring"
+          - "kubernetes.io/cluster/eks-monitoring" = "shared"
+          - "kubernetes.io/role/internal-elb"      = "1"
+        } -> null
+      - vpc_id                                         = "vpc-0a63248847fed82ad" -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # aws_subnet.private[1] will be destroyed
+  - resource "aws_subnet" "private" {
+      - arn                                            = "arn:aws:ec2:us-east-1:<account-id>:subnet/subnet-0aa2fd6b14b262fc5" -> null
+      - assign_ipv6_address_on_creation                = false -> null
+      - availability_zone                              = "us-east-1b" -> null
+      - availability_zone_id                           = "use1-az6" -> null
+      - cidr_block                                     = "10.0.2.0/24" -> null
+      - enable_dns64                                   = false -> null
+      - enable_lni_at_device_index                     = 0 -> null
+      - enable_resource_name_dns_a_record_on_launch    = false -> null
+      - enable_resource_name_dns_aaaa_record_on_launch = false -> null
+      - id                                             = "subnet-0aa2fd6b14b262fc5" -> null
+      - ipv6_native                                    = false -> null
+      - map_customer_owned_ip_on_launch                = false -> null
+      - map_public_ip_on_launch                        = false -> null
+      - owner_id                                       = "<account-id>" -> null
+      - private_dns_hostname_type_on_launch            = "ip-name" -> null
+      - tags                                           = {
+          - "Name"                                 = "eks-monitoring-private-us-east-1b"
+          - "kubernetes.io/cluster/eks-monitoring" = "shared"
+          - "kubernetes.io/role/internal-elb"      = "1"
+        } -> null
+      - tags_all                                       = {
+          - "Environment"                          = "dev"
+          - "ManagedBy"                            = "terraform"
+          - "Name"                                 = "eks-monitoring-private-us-east-1b"
+          - "Project"                              = "eks-monitoring"
+          - "kubernetes.io/cluster/eks-monitoring" = "shared"
+          - "kubernetes.io/role/internal-elb"      = "1"
+        } -> null
+      - vpc_id                                         = "vpc-0a63248847fed82ad" -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # aws_subnet.public[0] will be destroyed
+  - resource "aws_subnet" "public" {
+      - arn                                            = "arn:aws:ec2:us-east-1:<account-id>:subnet/subnet-032c9adcb95cba2a2" -> null
+      - assign_ipv6_address_on_creation                = false -> null
+      - availability_zone                              = "us-east-1a" -> null
+      - availability_zone_id                           = "use1-az4" -> null
+      - cidr_block                                     = "10.0.101.0/24" -> null
+      - enable_dns64                                   = false -> null
+      - enable_lni_at_device_index                     = 0 -> null
+      - enable_resource_name_dns_a_record_on_launch    = false -> null
+      - enable_resource_name_dns_aaaa_record_on_launch = false -> null
+      - id                                             = "subnet-032c9adcb95cba2a2" -> null
+      - ipv6_native                                    = false -> null
+      - map_customer_owned_ip_on_launch                = false -> null
+      - map_public_ip_on_launch                        = true -> null
+      - owner_id                                       = "<account-id>" -> null
+      - private_dns_hostname_type_on_launch            = "ip-name" -> null
+      - tags                                           = {
+          - "Name"                                 = "eks-monitoring-public-us-east-1a"
+          - "kubernetes.io/cluster/eks-monitoring" = "shared"
+          - "kubernetes.io/role/elb"               = "1"
+        } -> null
+      - tags_all                                       = {
+          - "Environment"                          = "dev"
+          - "ManagedBy"                            = "terraform"
+          - "Name"                                 = "eks-monitoring-public-us-east-1a"
+          - "Project"                              = "eks-monitoring"
+          - "kubernetes.io/cluster/eks-monitoring" = "shared"
+          - "kubernetes.io/role/elb"               = "1"
+        } -> null
+      - vpc_id                                         = "vpc-0a63248847fed82ad" -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # aws_subnet.public[1] will be destroyed
+  - resource "aws_subnet" "public" {
+      - arn                                            = "arn:aws:ec2:us-east-1:<account-id>:subnet/subnet-0bcb608e2a1dabef0" -> null
+      - assign_ipv6_address_on_creation                = false -> null
+      - availability_zone                              = "us-east-1b" -> null
+      - availability_zone_id                           = "use1-az6" -> null
+      - cidr_block                                     = "10.0.102.0/24" -> null
+      - enable_dns64                                   = false -> null
+      - enable_lni_at_device_index                     = 0 -> null
+      - enable_resource_name_dns_a_record_on_launch    = false -> null
+      - enable_resource_name_dns_aaaa_record_on_launch = false -> null
+      - id                                             = "subnet-0bcb608e2a1dabef0" -> null
+      - ipv6_native                                    = false -> null
+      - map_customer_owned_ip_on_launch                = false -> null
+      - map_public_ip_on_launch                        = true -> null
+      - owner_id                                       = "<account-id>" -> null
+      - private_dns_hostname_type_on_launch            = "ip-name" -> null
+      - tags                                           = {
+          - "Name"                                 = "eks-monitoring-public-us-east-1b"
+          - "kubernetes.io/cluster/eks-monitoring" = "shared"
+          - "kubernetes.io/role/elb"               = "1"
+        } -> null
+      - tags_all                                       = {
+          - "Environment"                          = "dev"
+          - "ManagedBy"                            = "terraform"
+          - "Name"                                 = "eks-monitoring-public-us-east-1b"
+          - "Project"                              = "eks-monitoring"
+          - "kubernetes.io/cluster/eks-monitoring" = "shared"
+          - "kubernetes.io/role/elb"               = "1"
+        } -> null
+      - vpc_id                                         = "vpc-0a63248847fed82ad" -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # aws_vpc.main will be destroyed
+  - resource "aws_vpc" "main" {
+      - arn                                  = "arn:aws:ec2:us-east-1:<account-id>:vpc/vpc-0a63248847fed82ad" -> null
+      - assign_generated_ipv6_cidr_block     = false -> null
+      - cidr_block                           = "10.0.0.0/16" -> null
+      - default_network_acl_id               = "acl-0cc3fe19b1e945aad" -> null
+      - default_route_table_id               = "rtb-043013a2da12240f2" -> null
+      - default_security_group_id            = "sg-0f88a875ea43bb497" -> null
+      - dhcp_options_id                      = "dopt-082f6ab9be90bce16" -> null
+      - enable_dns_hostnames                 = true -> null
+      - enable_dns_support                   = true -> null
+      - enable_network_address_usage_metrics = false -> null
+      - id                                   = "vpc-0a63248847fed82ad" -> null
+      - instance_tenancy                     = "default" -> null
+      - ipv6_netmask_length                  = 0 -> null
+      - main_route_table_id                  = "rtb-043013a2da12240f2" -> null
+      - owner_id                             = "<account-id>" -> null
+      - tags                                 = {
+          - "Name" = "eks-monitoring-vpc"
+        } -> null
+      - tags_all                             = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "eks-monitoring-vpc"
+          - "Project"     = "eks-monitoring"
+        } -> null
+        # (4 unchanged attributes hidden)
+    }
+
+Plan: 0 to add, 0 to change, 28 to destroy.
+
+Changes to Outputs:
+  - aws_region                    = "us-east-1" -> null
+  - cluster_certificate_authority = (sensitive value) -> null
+  - cluster_endpoint              = "https://<cluster-id>.gr7.us-east-1.eks.amazonaws.com" -> null
+  - cluster_name                  = "eks-monitoring" -> null
+  - cluster_oidc_issuer_url       = "https://oidc.eks.us-east-1.amazonaws.com/id/<cluster-id>" -> null
+  - cluster_security_group_id     = "sg-0b77a7d0e2203d7c5" -> null
+  - kubeconfig_command            = "aws eks update-kubeconfig --region us-east-1 --name eks-monitoring" -> null
+  - node_group_name               = "eks-monitoring-nodes" -> null
+  - oidc_provider_arn             = "arn:aws:iam::<account-id>:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/<cluster-id>" -> null
+  - private_subnet_ids            = [
+      - "subnet-0bd33d5d9d1b28b77",
+      - "subnet-0aa2fd6b14b262fc5",
+    ] -> null
+  - public_subnet_ids             = [
+      - "subnet-032c9adcb95cba2a2",
+      - "subnet-0bcb608e2a1dabef0",
+    ] -> null
+  - vpc_id                        = "vpc-0a63248847fed82ad" -> null
+aws_route_table_association.public[1]: Destroying... [id=rtbassoc-0474ef0c81b81e035]
+aws_eks_addon.vpc_cni: Destroying... [id=eks-monitoring:vpc-cni]
+aws_route_table_association.public[0]: Destroying... [id=rtbassoc-0bc45ddd2a557432f]
+aws_route_table_association.private[0]: Destroying... [id=rtbassoc-0fa5d29b52267df57]
+aws_eks_addon.kube_proxy: Destroying... [id=eks-monitoring:kube-proxy]
+aws_route_table_association.private[1]: Destroying... [id=rtbassoc-09959da2eaed5aafd]
+aws_iam_openid_connect_provider.eks: Destroying... [id=arn:aws:iam::<account-id>:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/<cluster-id>]
+aws_eks_addon.coredns: Destroying... [id=eks-monitoring:coredns]
+aws_iam_openid_connect_provider.eks: Destruction complete after 1s
+aws_route_table_association.private[1]: Destruction complete after 2s
+aws_route_table_association.private[0]: Destruction complete after 2s
+aws_route_table.private: Destroying... [id=rtb-03935a03e333f1ab7]
+aws_route_table_association.public[0]: Destruction complete after 2s
+aws_route_table_association.public[1]: Destruction complete after 2s
+aws_route_table.public: Destroying... [id=rtb-0c105e8be32af6c05]
+aws_eks_addon.kube_proxy: Destruction complete after 2s
+aws_eks_addon.coredns: Destruction complete after 3s
+aws_eks_addon.vpc_cni: Destruction complete after 3s
+aws_eks_node_group.main: Destroying... [id=eks-monitoring:eks-monitoring-nodes]
+aws_route_table.private: Destruction complete after 1s
+aws_nat_gateway.main: Destroying... [id=nat-0f1015621605ef7aa]
+aws_route_table.public: Destruction complete after 1s
+...
+aws_nat_gateway.main: Destruction complete after 1m3s
+aws_eip.nat: Destroying... [id=eipalloc-0096c3b41b447331b]
+aws_eip.nat: Destruction complete after 2s
+aws_internet_gateway.main: Destroying... [id=igw-00986dfe2b8cdcffc]
+aws_internet_gateway.main: Destruction complete after 1s
+...
+aws_eks_node_group.main: Destruction complete after 4m15s
+aws_iam_role_policy_attachment.eks_cni_policy: Destroying... [id=eks-monitoring-node-role-20261109122837874600000005]
+aws_iam_role_policy_attachment.eks_worker_node_policy: Destroying... [id=eks-monitoring-node-role-20261109122837509400000003]
+aws_iam_role_policy_attachment.ecr_read_only: Destroying... [id=eks-monitoring-node-role-20261109122837140200000001]
+aws_eks_cluster.main: Destroying... [id=eks-monitoring]
+aws_iam_role_policy_attachment.eks_cni_policy: Destruction complete after 2s
+aws_iam_role_policy_attachment.eks_worker_node_policy: Destruction complete after 2s
+aws_iam_role_policy_attachment.ecr_read_only: Destruction complete after 2s
+aws_iam_role.eks_nodes: Destroying... [id=eks-monitoring-node-role]
+aws_iam_role.eks_nodes: Destruction complete after 1s
+...
+aws_eks_cluster.main: Destruction complete after 2m42s
+aws_subnet.public[1]: Destroying... [id=subnet-0bcb608e2a1dabef0]
+aws_subnet.public[0]: Destroying... [id=subnet-032c9adcb95cba2a2]
+aws_security_group.eks_cluster: Destroying... [id=sg-0b77a7d0e2203d7c5]
+aws_subnet.private[0]: Destroying... [id=subnet-0bd33d5d9d1b28b77]
+aws_subnet.private[1]: Destroying... [id=subnet-0aa2fd6b14b262fc5]
+aws_iam_role_policy_attachment.eks_cluster_policy: Destroying... [id=eks-monitoring-cluster-role-20261109122837174300000002]
+aws_iam_role_policy_attachment.eks_vpc_resource_controller: Destroying... [id=eks-monitoring-cluster-role-20261109122837581500000004]
+aws_iam_role_policy_attachment.eks_cluster_policy: Destruction complete after 1s
+aws_iam_role_policy_attachment.eks_vpc_resource_controller: Destruction complete after 1s
+aws_iam_role.eks_cluster: Destroying... [id=eks-monitoring-cluster-role]
+aws_subnet.private[1]: Destruction complete after 2s
+aws_subnet.public[0]: Destruction complete after 2s
+aws_subnet.public[1]: Destruction complete after 2s
+aws_subnet.private[0]: Destruction complete after 2s
+aws_iam_role.eks_cluster: Destruction complete after 1s
+aws_security_group.eks_cluster: Destruction complete after 2s
+aws_vpc.main: Destroying... [id=vpc-0a63248847fed82ad]
+aws_vpc.main: Destruction complete after 1s
+
+Destroy complete! Resources: 28 destroyed.
+[ok] Terraform resources destroyed
+[->] Step 3/3: Checking for orphaned resources that still cost money
+
+[ok] Nothing orphaned in us-east-1.
+
+Check the AWS Billing console tomorrow anyway. Charges appear late,
+and an empty region today is not proof of a zero bill.
+
+destroy exit 0

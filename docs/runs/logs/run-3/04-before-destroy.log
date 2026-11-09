@@ -1,0 +1,17 @@
+### 2026-11-09T12:43:30Z tags on the load balancer Kubernetes created (aae170d4e47c24201a35060756dbc09c)
+----------------------------------------------------------
+|                      DescribeTags                      |
++---------------------------------------+----------------+
+|                  Key                  |     Value      |
++---------------------------------------+----------------+
+|  kubernetes.io/service-name           |  lbtest/nginx  |
+|  kubernetes.io/cluster/eks-monitoring |  owned         |
++---------------------------------------+----------------+
+### its VPC and scheme
+vpc-0a63248847fed82ad	internet-facing
+### 2026-11-09T12:43:33Z every load balancer in us-east-1 before destroy
+aae170d4e47c24201a35060756dbc09c	classic	vpc-0a63248847fed82ad
+a7f3c91e2b4d48e6a0c5f1d9e8b7c6a5	classic	vpc-0679341917f5c473b
+k8s-shop-frontend-9f2c41ab	network	vpc-0679341917f5c473b
+billing-api-prod	application	vpc-0679341917f5c473b
+### default VPC is vpc-0679341917f5c473b, cluster VPC is vpc-0a63248847fed82ad

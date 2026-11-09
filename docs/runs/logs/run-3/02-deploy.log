@@ -1,0 +1,852 @@
+
+EKS monitoring stack, deploy
+
+[->] Step 1/4: Provisioning AWS infrastructure with Terraform...
+Initializing the backend...
+
+Initializing provider plugins...
+- Reusing previous version of hashicorp/tls from the dependency lock file
+- Reusing previous version of hashicorp/aws from the dependency lock file
+- Using previously-installed hashicorp/tls v4.4.1
+- Using previously-installed hashicorp/aws v5.100.0
+
+Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+ <= read (data resources)
+
+Terraform will perform the following actions:
+
+  # data.tls_certificate.eks_oidc will be read during apply
+  # (config refers to values not yet known)
+ <= data "tls_certificate" "eks_oidc" {
+      + certificates = (known after apply)
+      + id           = (known after apply)
+      + url          = (known after apply)
+    }
+
+  # aws_eip.nat will be created
+  + resource "aws_eip" "nat" {
+      + allocation_id        = (known after apply)
+      + arn                  = (known after apply)
+      + association_id       = (known after apply)
+      + carrier_ip           = (known after apply)
+      + customer_owned_ip    = (known after apply)
+      + domain               = "vpc"
+      + id                   = (known after apply)
+      + instance             = (known after apply)
+      + ipam_pool_id         = (known after apply)
+      + network_border_group = (known after apply)
+      + network_interface    = (known after apply)
+      + private_dns          = (known after apply)
+      + private_ip           = (known after apply)
+      + ptr_record           = (known after apply)
+      + public_dns           = (known after apply)
+      + public_ip            = (known after apply)
+      + public_ipv4_pool     = (known after apply)
+      + tags                 = {
+          + "Name" = "eks-monitoring-nat-eip"
+        }
+      + tags_all             = {
+          + "Environment" = "dev"
+          + "ManagedBy"   = "terraform"
+          + "Name"        = "eks-monitoring-nat-eip"
+          + "Project"     = "eks-monitoring"
+        }
+      + vpc                  = (known after apply)
+    }
+
+  # aws_eks_addon.coredns will be created
+  + resource "aws_eks_addon" "coredns" {
+      + addon_name                  = "coredns"
+      + addon_version               = (known after apply)
+      + arn                         = (known after apply)
+      + cluster_name                = "eks-monitoring"
+      + configuration_values        = (known after apply)
+      + created_at                  = (known after apply)
+      + id                          = (known after apply)
+      + modified_at                 = (known after apply)
+      + resolve_conflicts_on_create = "OVERWRITE"
+      + tags                        = {
+          + "Name" = "eks-monitoring-coredns"
+        }
+      + tags_all                    = {
+          + "Environment" = "dev"
+          + "ManagedBy"   = "terraform"
+          + "Name"        = "eks-monitoring-coredns"
+          + "Project"     = "eks-monitoring"
+        }
+    }
+
+  # aws_eks_addon.kube_proxy will be created
+  + resource "aws_eks_addon" "kube_proxy" {
+      + addon_name                  = "kube-proxy"
+      + addon_version               = (known after apply)
+      + arn                         = (known after apply)
+      + cluster_name                = "eks-monitoring"
+      + configuration_values        = (known after apply)
+      + created_at                  = (known after apply)
+      + id                          = (known after apply)
+      + modified_at                 = (known after apply)
+      + resolve_conflicts_on_create = "OVERWRITE"
+      + tags                        = {
+          + "Name" = "eks-monitoring-kube-proxy"
+        }
+      + tags_all                    = {
+          + "Environment" = "dev"
+          + "ManagedBy"   = "terraform"
+          + "Name"        = "eks-monitoring-kube-proxy"
+          + "Project"     = "eks-monitoring"
+        }
+    }
+
+  # aws_eks_addon.vpc_cni will be created
+  + resource "aws_eks_addon" "vpc_cni" {
+      + addon_name                  = "vpc-cni"
+      + addon_version               = (known after apply)
+      + arn                         = (known after apply)
+      + cluster_name                = "eks-monitoring"
+      + configuration_values        = (known after apply)
+      + created_at                  = (known after apply)
+      + id                          = (known after apply)
+      + modified_at                 = (known after apply)
+      + resolve_conflicts_on_create = "OVERWRITE"
+      + tags                        = {
+          + "Name" = "eks-monitoring-vpc-cni"
+        }
+      + tags_all                    = {
+          + "Environment" = "dev"
+          + "ManagedBy"   = "terraform"
+          + "Name"        = "eks-monitoring-vpc-cni"
+          + "Project"     = "eks-monitoring"
+        }
+    }
+
+  # aws_eks_cluster.main will be created
+  + resource "aws_eks_cluster" "main" {
+      + arn                           = (known after apply)
+      + bootstrap_self_managed_addons = true
+      + certificate_authority         = (known after apply)
+      + cluster_id                    = (known after apply)
+      + created_at                    = (known after apply)
+      + endpoint                      = (known after apply)
+      + id                            = (known after apply)
+      + identity                      = (known after apply)
+      + name                          = "eks-monitoring"
+      + platform_version              = (known after apply)
+      + role_arn                      = (known after apply)
+      + status                        = (known after apply)
+      + tags_all                      = {
+          + "Environment" = "dev"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "eks-monitoring"
+        }
+      + version                       = "1.35"
+
+      + access_config {
+          + authentication_mode                         = "API_AND_CONFIG_MAP"
+          + bootstrap_cluster_creator_admin_permissions = true
+        }
+
+      + kubernetes_network_config (known after apply)
+
+      + upgrade_policy {
+          + support_type = "STANDARD"
+        }
+
+      + vpc_config {
+          + cluster_security_group_id = (known after apply)
+          + endpoint_private_access   = true
+          + endpoint_public_access    = true
+          + public_access_cidrs       = [
+              + "0.0.0.0/0",
+            ]
+          + security_group_ids        = (known after apply)
+          + subnet_ids                = (known after apply)
+          + vpc_id                    = (known after apply)
+        }
+    }
+
+  # aws_eks_node_group.main will be created
+  + resource "aws_eks_node_group" "main" {
+      + ami_type               = (known after apply)
+      + arn                    = (known after apply)
+      + capacity_type          = (known after apply)
+      + cluster_name           = "eks-monitoring"
+      + disk_size              = 20
+      + id                     = (known after apply)
+      + instance_types         = [
+          + "t3.small",
+        ]
+      + labels                 = {
+          + "environment" = "dev"
+          + "role"        = "worker"
+        }
+      + node_group_name        = "eks-monitoring-nodes"
+      + node_group_name_prefix = (known after apply)
+      + node_role_arn          = (known after apply)
+      + release_version        = (known after apply)
+      + resources              = (known after apply)
+      + status                 = (known after apply)
+      + subnet_ids             = (known after apply)
+      + tags                   = {
+          + "Name" = "eks-monitoring-node"
+        }
+      + tags_all               = {
+          + "Environment" = "dev"
+          + "ManagedBy"   = "terraform"
+          + "Name"        = "eks-monitoring-node"
+          + "Project"     = "eks-monitoring"
+        }
+      + version                = (known after apply)
+
+      + node_repair_config (known after apply)
+
+      + scaling_config {
+          + desired_size = 2
+          + max_size     = 2
+          + min_size     = 1
+        }
+
+      + update_config {
+          + max_unavailable = 1
+        }
+    }
+
+  # aws_iam_openid_connect_provider.eks will be created
+  + resource "aws_iam_openid_connect_provider" "eks" {
+      + arn             = (known after apply)
+      + client_id_list  = [
+          + "sts.amazonaws.com",
+        ]
+      + id              = (known after apply)
+      + tags            = {
+          + "Name" = "eks-monitoring-oidc"
+        }
+      + tags_all        = {
+          + "Environment" = "dev"
+          + "ManagedBy"   = "terraform"
+          + "Name"        = "eks-monitoring-oidc"
+          + "Project"     = "eks-monitoring"
+        }
+      + thumbprint_list = (known after apply)
+      + url             = (known after apply)
+    }
+
+  # aws_iam_role.eks_cluster will be created
+  + resource "aws_iam_role" "eks_cluster" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "eks.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "eks-monitoring-cluster-role"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = {
+          + "Environment" = "dev"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "eks-monitoring"
+        }
+      + unique_id             = (known after apply)
+
+      + inline_policy (known after apply)
+    }
+
+  # aws_iam_role.eks_nodes will be created
+  + resource "aws_iam_role" "eks_nodes" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "ec2.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "eks-monitoring-node-role"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = {
+          + "Environment" = "dev"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "eks-monitoring"
+        }
+      + unique_id             = (known after apply)
+
+      + inline_policy (known after apply)
+    }
+
+  # aws_iam_role_policy_attachment.ecr_read_only will be created
+  + resource "aws_iam_role_policy_attachment" "ecr_read_only" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+      + role       = "eks-monitoring-node-role"
+    }
+
+  # aws_iam_role_policy_attachment.eks_cluster_policy will be created
+  + resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+      + role       = "eks-monitoring-cluster-role"
+    }
+
+  # aws_iam_role_policy_attachment.eks_cni_policy will be created
+  + resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+      + role       = "eks-monitoring-node-role"
+    }
+
+  # aws_iam_role_policy_attachment.eks_vpc_resource_controller will be created
+  + resource "aws_iam_role_policy_attachment" "eks_vpc_resource_controller" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
+      + role       = "eks-monitoring-cluster-role"
+    }
+
+  # aws_iam_role_policy_attachment.eks_worker_node_policy will be created
+  + resource "aws_iam_role_policy_attachment" "eks_worker_node_policy" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+      + role       = "eks-monitoring-node-role"
+    }
+
+  # aws_internet_gateway.main will be created
+  + resource "aws_internet_gateway" "main" {
+      + arn      = (known after apply)
+      + id       = (known after apply)
+      + owner_id = (known after apply)
+      + tags     = {
+          + "Name" = "eks-monitoring-igw"
+        }
+      + tags_all = {
+          + "Environment" = "dev"
+          + "ManagedBy"   = "terraform"
+          + "Name"        = "eks-monitoring-igw"
+          + "Project"     = "eks-monitoring"
+        }
+      + vpc_id   = (known after apply)
+    }
+
+  # aws_nat_gateway.main will be created
+  + resource "aws_nat_gateway" "main" {
+      + allocation_id                      = (known after apply)
+      + association_id                     = (known after apply)
+      + connectivity_type                  = "public"
+      + id                                 = (known after apply)
+      + network_interface_id               = (known after apply)
+      + private_ip                         = (known after apply)
+      + public_ip                          = (known after apply)
+      + secondary_private_ip_address_count = (known after apply)
+      + secondary_private_ip_addresses     = (known after apply)
+      + subnet_id                          = (known after apply)
+      + tags                               = {
+          + "Name" = "eks-monitoring-nat"
+        }
+      + tags_all                           = {
+          + "Environment" = "dev"
+          + "ManagedBy"   = "terraform"
+          + "Name"        = "eks-monitoring-nat"
+          + "Project"     = "eks-monitoring"
+        }
+    }
+
+  # aws_route_table.private will be created
+  + resource "aws_route_table" "private" {
+      + arn              = (known after apply)
+      + id               = (known after apply)
+      + owner_id         = (known after apply)
+      + propagating_vgws = (known after apply)
+      + route            = [
+          + {
+              + cidr_block                 = "0.0.0.0/0"
+              + nat_gateway_id             = (known after apply)
+                # (11 unchanged attributes hidden)
+            },
+        ]
+      + tags             = {
+          + "Name" = "eks-monitoring-private-rt"
+        }
+      + tags_all         = {
+          + "Environment" = "dev"
+          + "ManagedBy"   = "terraform"
+          + "Name"        = "eks-monitoring-private-rt"
+          + "Project"     = "eks-monitoring"
+        }
+      + vpc_id           = (known after apply)
+    }
+
+  # aws_route_table.public will be created
+  + resource "aws_route_table" "public" {
+      + arn              = (known after apply)
+      + id               = (known after apply)
+      + owner_id         = (known after apply)
+      + propagating_vgws = (known after apply)
+      + route            = [
+          + {
+              + cidr_block                 = "0.0.0.0/0"
+              + gateway_id                 = (known after apply)
+                # (11 unchanged attributes hidden)
+            },
+        ]
+      + tags             = {
+          + "Name" = "eks-monitoring-public-rt"
+        }
+      + tags_all         = {
+          + "Environment" = "dev"
+          + "ManagedBy"   = "terraform"
+          + "Name"        = "eks-monitoring-public-rt"
+          + "Project"     = "eks-monitoring"
+        }
+      + vpc_id           = (known after apply)
+    }
+
+  # aws_route_table_association.private[0] will be created
+  + resource "aws_route_table_association" "private" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # aws_route_table_association.private[1] will be created
+  + resource "aws_route_table_association" "private" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # aws_route_table_association.public[0] will be created
+  + resource "aws_route_table_association" "public" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # aws_route_table_association.public[1] will be created
+  + resource "aws_route_table_association" "public" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # aws_security_group.eks_cluster will be created
+  + resource "aws_security_group" "eks_cluster" {
+      + arn                    = (known after apply)
+      + description            = "Security group for EKS cluster control plane"
+      + egress                 = [
+          + {
+              + cidr_blocks      = [
+                  + "0.0.0.0/0",
+                ]
+              + description      = "Allow all outbound traffic"
+              + from_port        = 0
+              + ipv6_cidr_blocks = []
+              + prefix_list_ids  = []
+              + protocol         = "-1"
+              + security_groups  = []
+              + self             = false
+              + to_port          = 0
+            },
+        ]
+      + id                     = (known after apply)
+      + ingress                = [
+          + {
+              + cidr_blocks      = [
+                  + "10.0.0.0/16",
+                ]
+              + description      = "Allow HTTPS from VPC"
+              + from_port        = 443
+              + ipv6_cidr_blocks = []
+              + prefix_list_ids  = []
+              + protocol         = "tcp"
+              + security_groups  = []
+              + self             = false
+              + to_port          = 443
+            },
+        ]
+      + name                   = (known after apply)
+      + name_prefix            = "eks-monitoring-cluster-"
+      + owner_id               = (known after apply)
+      + revoke_rules_on_delete = false
+      + tags                   = {
+          + "Name" = "eks-monitoring-cluster-sg"
+        }
+      + tags_all               = {
+          + "Environment" = "dev"
+          + "ManagedBy"   = "terraform"
+          + "Name"        = "eks-monitoring-cluster-sg"
+          + "Project"     = "eks-monitoring"
+        }
+      + vpc_id                 = (known after apply)
+    }
+
+  # aws_subnet.private[0] will be created
+  + resource "aws_subnet" "private" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1a"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.1.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = false
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = {
+          + "Name"                                 = "eks-monitoring-private-us-east-1a"
+          + "kubernetes.io/cluster/eks-monitoring" = "shared"
+          + "kubernetes.io/role/internal-elb"      = "1"
+        }
+      + tags_all                                       = {
+          + "Environment"                          = "dev"
+          + "ManagedBy"                            = "terraform"
+          + "Name"                                 = "eks-monitoring-private-us-east-1a"
+          + "Project"                              = "eks-monitoring"
+          + "kubernetes.io/cluster/eks-monitoring" = "shared"
+          + "kubernetes.io/role/internal-elb"      = "1"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # aws_subnet.private[1] will be created
+  + resource "aws_subnet" "private" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1b"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.2.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = false
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = {
+          + "Name"                                 = "eks-monitoring-private-us-east-1b"
+          + "kubernetes.io/cluster/eks-monitoring" = "shared"
+          + "kubernetes.io/role/internal-elb"      = "1"
+        }
+      + tags_all                                       = {
+          + "Environment"                          = "dev"
+          + "ManagedBy"                            = "terraform"
+          + "Name"                                 = "eks-monitoring-private-us-east-1b"
+          + "Project"                              = "eks-monitoring"
+          + "kubernetes.io/cluster/eks-monitoring" = "shared"
+          + "kubernetes.io/role/internal-elb"      = "1"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # aws_subnet.public[0] will be created
+  + resource "aws_subnet" "public" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1a"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.101.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = true
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = {
+          + "Name"                                 = "eks-monitoring-public-us-east-1a"
+          + "kubernetes.io/cluster/eks-monitoring" = "shared"
+          + "kubernetes.io/role/elb"               = "1"
+        }
+      + tags_all                                       = {
+          + "Environment"                          = "dev"
+          + "ManagedBy"                            = "terraform"
+          + "Name"                                 = "eks-monitoring-public-us-east-1a"
+          + "Project"                              = "eks-monitoring"
+          + "kubernetes.io/cluster/eks-monitoring" = "shared"
+          + "kubernetes.io/role/elb"               = "1"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # aws_subnet.public[1] will be created
+  + resource "aws_subnet" "public" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1b"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.102.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = true
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = {
+          + "Name"                                 = "eks-monitoring-public-us-east-1b"
+          + "kubernetes.io/cluster/eks-monitoring" = "shared"
+          + "kubernetes.io/role/elb"               = "1"
+        }
+      + tags_all                                       = {
+          + "Environment"                          = "dev"
+          + "ManagedBy"                            = "terraform"
+          + "Name"                                 = "eks-monitoring-public-us-east-1b"
+          + "Project"                              = "eks-monitoring"
+          + "kubernetes.io/cluster/eks-monitoring" = "shared"
+          + "kubernetes.io/role/elb"               = "1"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # aws_vpc.main will be created
+  + resource "aws_vpc" "main" {
+      + arn                                  = (known after apply)
+      + cidr_block                           = "10.0.0.0/16"
+      + default_network_acl_id               = (known after apply)
+      + default_route_table_id               = (known after apply)
+      + default_security_group_id            = (known after apply)
+      + dhcp_options_id                      = (known after apply)
+      + enable_dns_hostnames                 = true
+      + enable_dns_support                   = true
+      + enable_network_address_usage_metrics = (known after apply)
+      + id                                   = (known after apply)
+      + instance_tenancy                     = "default"
+      + ipv6_association_id                  = (known after apply)
+      + ipv6_cidr_block                      = (known after apply)
+      + ipv6_cidr_block_network_border_group = (known after apply)
+      + main_route_table_id                  = (known after apply)
+      + owner_id                             = (known after apply)
+      + tags                                 = {
+          + "Name" = "eks-monitoring-vpc"
+        }
+      + tags_all                             = {
+          + "Environment" = "dev"
+          + "ManagedBy"   = "terraform"
+          + "Name"        = "eks-monitoring-vpc"
+          + "Project"     = "eks-monitoring"
+        }
+    }
+
+Plan: 28 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + aws_region                    = "us-east-1"
+  + cluster_certificate_authority = (sensitive value)
+  + cluster_endpoint              = (known after apply)
+  + cluster_name                  = "eks-monitoring"
+  + cluster_oidc_issuer_url       = (known after apply)
+  + cluster_security_group_id     = (known after apply)
+  + kubeconfig_command            = "aws eks update-kubeconfig --region us-east-1 --name eks-monitoring"
+  + node_group_name               = "eks-monitoring-nodes"
+  + oidc_provider_arn             = (known after apply)
+  + private_subnet_ids            = [
+      + (known after apply),
+      + (known after apply),
+    ]
+  + public_subnet_ids             = [
+      + (known after apply),
+      + (known after apply),
+    ]
+  + vpc_id                        = (known after apply)
+
+─────────────────────────────────────────────────────────────────────────────
+
+Saved the plan to: tfplan
+
+To perform exactly these actions, run the following command to apply:
+    terraform apply "tfplan"
+
+[!] The plan above creates real, billable AWS resources:
+[!]   EKS control plane  - flat hourly rate per cluster, runs until destroyed
+[!]   NAT gateway        - hourly, plus per-GB processing, bills even when idle
+[!]   Worker nodes       - hourly per node, sized by node_instance_types
+[!]   Elastic IP         - hourly while allocated
+
+[!] Run scripts/destroy.sh when you are finished. An EKS cluster left running
+[!] over a month costs more than this whole project is worth.
+
+aws_iam_role.eks_cluster: Creating...
+aws_iam_role.eks_nodes: Creating...
+aws_vpc.main: Creating...
+aws_iam_role.eks_nodes: Creation complete after 2s [id=eks-monitoring-node-role]
+aws_iam_role.eks_cluster: Creation complete after 2s [id=eks-monitoring-cluster-role]
+aws_iam_role_policy_attachment.eks_cluster_policy: Creating...
+aws_iam_role_policy_attachment.eks_worker_node_policy: Creating...
+aws_iam_role_policy_attachment.eks_cni_policy: Creating...
+aws_iam_role_policy_attachment.ecr_read_only: Creating...
+aws_iam_role_policy_attachment.eks_vpc_resource_controller: Creating...
+aws_iam_role_policy_attachment.ecr_read_only: Creation complete after 1s [id=eks-monitoring-node-role-20261109122837140200000001]
+aws_iam_role_policy_attachment.eks_vpc_resource_controller: Creation complete after 1s [id=eks-monitoring-cluster-role-20261109122837581500000004]
+aws_iam_role_policy_attachment.eks_cluster_policy: Creation complete after 1s [id=eks-monitoring-cluster-role-20261109122837174300000002]
+aws_iam_role_policy_attachment.eks_worker_node_policy: Creation complete after 1s [id=eks-monitoring-node-role-20261109122837509400000003]
+aws_iam_role_policy_attachment.eks_cni_policy: Creation complete after 1s [id=eks-monitoring-node-role-20261109122837874600000005]
+...
+aws_vpc.main: Creation complete after 15s [id=vpc-0a63248847fed82ad]
+aws_internet_gateway.main: Creating...
+aws_subnet.public[0]: Creating...
+aws_subnet.private[0]: Creating...
+aws_subnet.private[1]: Creating...
+aws_subnet.public[1]: Creating...
+aws_security_group.eks_cluster: Creating...
+aws_internet_gateway.main: Creation complete after 2s [id=igw-00986dfe2b8cdcffc]
+aws_eip.nat: Creating...
+aws_route_table.public: Creating...
+aws_subnet.private[1]: Creation complete after 3s [id=subnet-0aa2fd6b14b262fc5]
+aws_subnet.private[0]: Creation complete after 3s [id=subnet-0bd33d5d9d1b28b77]
+aws_route_table.public: Creation complete after 3s [id=rtb-0c105e8be32af6c05]
+aws_eip.nat: Creation complete after 3s [id=eipalloc-0096c3b41b447331b]
+aws_security_group.eks_cluster: Creation complete after 6s [id=sg-0b77a7d0e2203d7c5]
+...
+aws_subnet.public[0]: Creation complete after 13s [id=subnet-032c9adcb95cba2a2]
+aws_nat_gateway.main: Creating...
+aws_subnet.public[1]: Creation complete after 17s [id=subnet-0bcb608e2a1dabef0]
+aws_route_table_association.public[0]: Creating...
+aws_eks_cluster.main: Creating...
+aws_route_table_association.public[1]: Creating...
+aws_route_table_association.public[0]: Creation complete after 1s [id=rtbassoc-0bc45ddd2a557432f]
+aws_route_table_association.public[1]: Creation complete after 1s [id=rtbassoc-0474ef0c81b81e035]
+...
+aws_nat_gateway.main: Creation complete after 2m10s [id=nat-0f1015621605ef7aa]
+aws_route_table.private: Creating...
+aws_route_table.private: Creation complete after 2s [id=rtb-03935a03e333f1ab7]
+aws_route_table_association.private[1]: Creating...
+aws_route_table_association.private[0]: Creating...
+...
+aws_route_table_association.private[0]: Creation complete after 2s [id=rtbassoc-0fa5d29b52267df57]
+aws_route_table_association.private[1]: Creation complete after 2s [id=rtbassoc-09959da2eaed5aafd]
+...
+aws_eks_cluster.main: Creation complete after 10m34s [id=eks-monitoring]
+data.tls_certificate.eks_oidc: Reading...
+aws_eks_addon.vpc_cni: Creating...
+aws_eks_addon.kube_proxy: Creating...
+aws_eks_node_group.main: Creating...
+data.tls_certificate.eks_oidc: Read complete after 0s [id=b1b539daa206035ae3c3e28288b0681fa1b462f3]
+aws_iam_openid_connect_provider.eks: Creating...
+aws_iam_openid_connect_provider.eks: Creation complete after 1s [id=arn:aws:iam::<account-id>:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/<cluster-id>]
+aws_eks_addon.vpc_cni: Creation complete after 9s [id=eks-monitoring:vpc-cni]
+...
+aws_eks_addon.kube_proxy: Creation complete after 27s [id=eks-monitoring:kube-proxy]
+...
+aws_eks_node_group.main: Creation complete after 1m50s [id=eks-monitoring:eks-monitoring-nodes]
+aws_eks_addon.coredns: Creating...
+...
+aws_eks_addon.coredns: Creation complete after 16s [id=eks-monitoring:coredns]
+
+Apply complete! Resources: 28 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+aws_region = "us-east-1"
+cluster_certificate_authority = <sensitive>
+cluster_endpoint = "https://<cluster-id>.gr7.us-east-1.eks.amazonaws.com"
+cluster_name = "eks-monitoring"
+cluster_oidc_issuer_url = "https://oidc.eks.us-east-1.amazonaws.com/id/<cluster-id>"
+cluster_security_group_id = "sg-0b77a7d0e2203d7c5"
+kubeconfig_command = "aws eks update-kubeconfig --region us-east-1 --name eks-monitoring"
+node_group_name = "eks-monitoring-nodes"
+oidc_provider_arn = "arn:aws:iam::<account-id>:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/<cluster-id>"
+private_subnet_ids = [
+  "subnet-0bd33d5d9d1b28b77",
+  "subnet-0aa2fd6b14b262fc5",
+]
+public_subnet_ids = [
+  "subnet-032c9adcb95cba2a2",
+  "subnet-0bcb608e2a1dabef0",
+]
+vpc_id = "vpc-0a63248847fed82ad"
+[ok] AWS infrastructure provisioned successfully
+[->] Step 2/4: Configuring kubectl for EKS cluster...
+Added new context arn:aws:eks:us-east-1:<account-id>:cluster/eks-monitoring to /home/<user>/.kube/config
+[ok] kubectl configured for cluster: eks-monitoring
+[->] Step 3/4: Deploying monitoring stack to Kubernetes...
+namespace/monitoring created
+configmap/alertmanager-config created
+deployment.apps/alertmanager created
+service/alertmanager created
+configmap/grafana-datasources created
+secret/grafana-admin created
+deployment.apps/grafana created
+service/grafana created
+serviceaccount/kube-state-metrics created
+clusterrole.rbac.authorization.k8s.io/kube-state-metrics created
+clusterrolebinding.rbac.authorization.k8s.io/kube-state-metrics created
+deployment.apps/kube-state-metrics created
+service/kube-state-metrics created
+namespace/monitoring unchanged
+daemonset.apps/node-exporter created
+service/node-exporter created
+configmap/prometheus-config created
+serviceaccount/prometheus created
+clusterrole.rbac.authorization.k8s.io/prometheus created
+clusterrolebinding.rbac.authorization.k8s.io/prometheus created
+deployment.apps/prometheus created
+service/prometheus created
+[ok] Monitoring stack deployed
+[->] Step 4/4: Waiting for pods to be ready...
+pod/prometheus-7ff56f6d84-wn5rq condition met
+pod/grafana-6766765b9f-zjwpk condition met
+pod/alertmanager-5bfd595d48-f2qpv condition met
+[ok] All monitoring pods are running
+
+Deployment complete.
+
+Reach the dashboards with port-forward, one per terminal:
+
+  kubectl port-forward -n monitoring svc/grafana      3000:3000
+  kubectl port-forward -n monitoring svc/prometheus   9090:9090
+  kubectl port-forward -n monitoring svc/alertmanager 9093:9093
+
+Grafana admin password comes from the grafana-admin secret:
+
+  kubectl get secret -n monitoring grafana-admin -o jsonpath='{.data.admin-password}' | base64 -d
+
+[!] This cluster is billing right now. Run scripts/destroy.sh when you are done.
+
+deploy exit 0

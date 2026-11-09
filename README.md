@@ -1,19 +1,18 @@
 # Terraform AWS EKS Monitoring Stack
 
-Infrastructure as Code for a Kubernetes cluster on AWS EKS with Prometheus, Grafana, AlertManager and GitOps delivery via ArgoCD.
+Infrastructure as Code for a Kubernetes cluster on AWS EKS with Prometheus, Grafana and AlertManager, plus an optional ArgoCD Application for GitOps delivery.
 
 ![Terraform](https://img.shields.io/badge/Terraform-v1.5+-7B42BC?logo=terraform&logoColor=white)
 ![AWS](https://img.shields.io/badge/AWS-EKS-FF9900?logo=amazonaws&logoColor=white)
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-v1.35-326CE5?logo=kubernetes&logoColor=white)
 ![Prometheus](https://img.shields.io/badge/Prometheus-Monitoring-E6522C?logo=prometheus&logoColor=white)
 ![Grafana](https://img.shields.io/badge/Grafana-v13-F46800?logo=grafana&logoColor=white)
-![ArgoCD](https://img.shields.io/badge/ArgoCD-GitOps-EF7B4D?logo=argo&logoColor=white)
 
 This cluster is built to be stood up, worked with, and destroyed the same weekend. Several choices are deliberately cheaper and simpler than production would be, and each one is written down in [docs/decisions.md](docs/decisions.md) with what production does instead.
 
 **It bills by the hour while it runs.** Read [docs/cost.md](docs/cost.md) before the first apply and tear it down with `scripts/destroy.sh`.
 
-**Status:** Applied to a live EKS cluster on 2026-10-28 (2 x t3.small, us-east-1) and torn down the same evening. All ten scrape targets were up, a crashing pod fired `PodCrashLooping`, a node with its kubelet stopped fired `NodeNotReady`, and both alerts reached Alertmanager. That run found the Grafana memory limit, crash-loop rule and upgrade policy problems fixed since. A second live run on 2026-10-28 confirmed all three. The cluster came up with upgrade policy `STANDARD`, Grafana peaked at 610 MiB under the new 1Gi limit with no restarts, and `PodCrashLooping` stayed firing for over 20 minutes of a crash loop.
+**Status:** Applied to a live EKS cluster on 2026-10-28 (2 x t3.small, us-east-1) and torn down the same evening. All ten scrape targets were up, a crashing pod fired `PodCrashLooping`, a node with its kubelet stopped fired `NodeNotReady`, and both alerts reached Alertmanager. That run found the Grafana memory limit, crash-loop rule and upgrade policy problems fixed since. A second live run on 2026-10-28 confirmed all three. The cluster came up with upgrade policy `STANDARD`, Grafana peaked at 610 MiB under the new 1Gi limit with no restarts, and `PodCrashLooping` stayed firing for over 20 minutes of a crash loop. A third run on 2026-11-09 started with three load balancers from other projects in the account. `scripts/destroy.sh` removed only the one Kubernetes made and left the other three alone. Logs, screenshots and notes for all three runs are in [docs/runs/](docs/runs/README.md).
 
 ## Architecture
 
@@ -32,7 +31,7 @@ graph TB
                     PROM[Prometheus]
                     GRAF[Grafana]
                     AM[AlertManager]
-                    ARGO["ArgoCD (installed separately)"]
+                    ARGO["ArgoCD (optional, not used in the live runs)"]
                 end
             end
         end
@@ -61,7 +60,7 @@ The control plane is not in the diagram because AWS runs it. You never see those
 | Host metrics | node-exporter | Per-node CPU, memory, disk and network |
 | Visualization | Grafana | Explore queries against Prometheus |
 | Alerting | AlertManager | Routes alerts to Slack |
-| GitOps | ArgoCD | Syncs the cluster from Git |
+| GitOps, optional | ArgoCD | Can sync the cluster from Git. The live runs used `kubectl apply` |
 
 ## Alerts
 
@@ -174,7 +173,7 @@ Managed node groups rather than self-managed, so AMI updates and lifecycle are A
 
 Prometheus rather than CloudWatch. PromQL and the exporter ecosystem move between clouds. CloudWatch does not.
 
-GitOps with ArgoCD. Cluster state comes from a Git commit rather than from whoever last ran `kubectl apply`. ArgoCD watches the repo and syncs the difference.
+GitOps with ArgoCD. Cluster state comes from a Git commit rather than from whoever last ran `kubectl apply`. ArgoCD watches the repo and syncs the difference. The three live runs deployed with `kubectl apply` through `scripts/deploy.sh`. ArgoCD is the next step, and none of the runs tested it.
 
 AlertManager routes to Slack. Critical alerts go to their own channel, warnings to another, and an inhibit rule suppresses the warning when the critical for the same node is already firing.
 
@@ -228,7 +227,8 @@ terraform-eks-monitoring/
 ├── docs/
 │   ├── decisions.md              # every choice and the alternative it beat
 │   ├── runbook.md                # the commands, in order, plus upgrades
-│   └── cost.md                   # what bills and how not to be surprised
+│   ├── cost.md                   # what bills and how not to be surprised
+│   └── runs/                     # logs, screenshots and notes from the three live runs
 ├── .gitignore
 ├── LICENSE
 └── README.md

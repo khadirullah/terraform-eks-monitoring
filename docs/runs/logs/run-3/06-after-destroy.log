@@ -1,0 +1,10 @@
+### 2026-11-09T13:02:16Z every load balancer in us-east-1 after destroy
+a7f3c91e2b4d48e6a0c5f1d9e8b7c6a5	classic	vpc-0679341917f5c473b
+k8s-shop-frontend-9f2c41ab	network	vpc-0679341917f5c473b	active
+billing-api-prod	application	vpc-0679341917f5c473b	active
+### the Kubernetes one by name
+aws: [ERROR]: An error occurred (LoadBalancerNotFound) when calling the DescribeLoadBalancers operation: There is no ACTIVE Load Balancer named 'aae170d4e47c24201a35060756dbc09c'
+### cluster VPC vpc-0a63248847fed82ad still there?
+aws: [ERROR]: An error occurred (InvalidVpcID.NotFound) when calling the DescribeVpcs operation: The vpc ID 'vpc-0a63248847fed82ad' does not exist
+### EKS clusters
+### security groups left by the Kubernetes LB (k8s-elb-*)

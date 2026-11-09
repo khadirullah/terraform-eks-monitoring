@@ -1,0 +1,9 @@
+### 2026-11-09T12:28:05Z other-project classic LB, random-looking name, tag Project=payments-legacy
+internal-a7f3c91e2b4d48e6a0c5f1d9e8b7c6a5-124104975.us-east-1.elb.amazonaws.com
+exit 0
+### 2026-11-09T12:28:07Z other-project network LB, k8s in the name, tag elbv2.k8s.aws/cluster=shop-prod
+arn:aws:elasticloadbalancing:us-east-1:<account-id>:loadbalancer/net/k8s-shop-frontend-9f2c41ab/5b97593ecce5e470
+exit 0
+### 2026-11-09T12:28:08Z other-project application LB, tag Project=billing
+arn:aws:elasticloadbalancing:us-east-1:<account-id>:loadbalancer/app/billing-api-prod/98adff9956ff3eac
+exit 0

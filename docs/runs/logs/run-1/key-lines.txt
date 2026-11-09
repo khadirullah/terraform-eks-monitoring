@@ -1,0 +1,42 @@
+Key lines from my own terminal, 2026-10-28
+
+=== deploy.sh, Step 1 apply timings ===
+aws_nat_gateway.main: Creation complete after 1m39s
+aws_eks_cluster.main: Creation complete after 10m15s
+aws_eks_addon.vpc_cni: Creation complete after 10s
+aws_eks_addon.kube_proxy: Creation complete after 10s
+aws_eks_node_group.main: Creation complete after 1m51s
+aws_eks_addon.coredns: Creation complete after 17s
+Apply complete! Resources: 28 added, 0 changed, 0 destroyed.
+(plan showed "upgrade_policy (known after apply)" on create)
+
+=== deploy.sh, Step 3 failure (total elapsed 798.861s) ===
+[->] Step 3/4: Deploying monitoring stack to Kubernetes...
+error: error validating "k8s/monitoring/namespace.yaml": error validating data: failed to download openapi: Get "https://<cluster-id>.gr7.us-east-1.eks.amazonaws.com/openapi/v2?timeout=32s": dial tcp: lookup <cluster-id>.gr7.us-east-1.eks.amazonaws.com on 192.168.122.1:53: no such host; if you choose to ignore these errors, turn validation off with --validate=false
+
+=== DNS workaround sequence ===
+getent hosts <endpoint>          -> exit 2 (several times)
+echo "<public-ip> <endpoint>" | sudo tee -a /etc/hosts
+getent hosts <endpoint>          -> <public-ip>
+sudo sed -i '/DD1F.../d' /etc/hosts
+getent hosts <endpoint>          -> exit 2 again (cached NXDOMAIN still held)
+echo "<public-ip> <endpoint>" | sudo tee -a /etc/hosts   (re-added)
+kubectl apply -f k8s/monitoring/namespace.yaml ; kubectl apply -f k8s/monitoring/
+kubectl wait ... prometheus / grafana / alertmanager -> condition met
+sudo sed -i '/DD1F.../d' /etc/hosts   (removed for good; kubectl get nodes worked)
+
+=== crash test ===
+kubectl run crashtest --image=busybox -- sh -c "exit 1"
+kubectl get pods -A at 3m23s: crashtest Error 5 (119s ago); grafana Running 1 (110s ago)
+
+=== node test ===
+kubectl debug node/ip-10-0-2-242.ec2.internal --profile=sysadmin --image=busybox:1.37 -- nsenter -t 1 -m -u -i -n -p -- systemctl stop kubelet
+kubectl get nodes -> ip-10-0-2-242 NotReady
+aws ec2 reboot-instances ... -> kubectl get nodes both Ready
+
+=== destroy.sh (elapsed 478.838s) ===
+Destroy complete! Resources: 28 destroyed.
+[ok] Nothing orphaned in us-east-1.
+
+=== kubeconfig cleanup ===
+use-context kind-uptime; delete-context / delete-cluster / delete-user for the EKS arn; get-clusters -> kind-uptime only

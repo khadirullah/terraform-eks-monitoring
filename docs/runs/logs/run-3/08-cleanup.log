@@ -1,0 +1,15 @@
+### 2026-11-09T13:11:14Z delete the three other-project test load balancers
+classic exit 0
+network exit 0
+application exit 0
+### 2026-11-09T13:12:32Z after cleanup: classic=0 v2=0 elb-network-interfaces=0
+### region sweep
+eks: 
+instances: 
+nat: 
+eips: 
+non-default vpcs: 
+available volumes: 
+iam roles eks-monitoring*: 
+oidc providers: 
+log groups /aws/eks: 

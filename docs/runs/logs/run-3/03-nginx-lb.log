@@ -1,0 +1,12 @@
+### 2026-11-09T12:43:03Z kubectl config current-context: arn:aws:eks:us-east-1:<account-id>:cluster/eks-monitoring
+### 2026-11-09T12:43:03Z kubectl apply -f nginx-lb.yaml
+namespace/lbtest created
+deployment.apps/nginx created
+service/nginx created
+### 2026-11-09T12:43:20Z kubectl get svc -n lbtest
+NAME    TYPE           CLUSTER-IP       EXTERNAL-IP                                                              PORT(S)        AGE
+nginx   LoadBalancer   172.20.232.116   aae170d4e47c24201a35060756dbc09c-160376451.us-east-1.elb.amazonaws.com   80:31956/TCP   15s
+### events
+LAST SEEN   TYPE     REASON                 OBJECT          MESSAGE
+16s         Normal   EnsuringLoadBalancer   service/nginx   Ensuring load balancer
+12s         Normal   EnsuredLoadBalancer    service/nginx   Ensured load balancer
