@@ -289,7 +289,9 @@ ELB refuses to release, while the ELB keeps billing.
 
 So the script deletes LoadBalancer services first, waits for AWS to release them,
 then destroys, then sweeps for orphaned load balancers, unattached Elastic IPs and
-stray EBS volumes and exits non-zero if it finds any.
+stray EBS volumes and exits non-zero if it finds any. Load balancers are matched
+by the `kubernetes.io/cluster/<name>` or `elbv2.k8s.aws/cluster` tag, not by
+name, because the in-tree provider names them with a random hash.
 
 Nothing in this stack currently creates a LoadBalancer, since the UIs are
 reached with `port-forward`. The check is there because that will not stay true.

@@ -81,26 +81,60 @@ log "Terraform resources destroyed"
 # ── Step 3: Check nothing was left behind ──
 info "Step 3/3: Checking for orphaned resources that still cost money"
 
-ORPHAN_LB="$(aws elbv2 describe-load-balancers --region "$AWS_REGION" \
-    --query "LoadBalancers[?contains(LoadBalancerName, 'k8s')].LoadBalancerName" --output text 2>/dev/null || true)"
-ORPHAN_CLB="$(aws elb describe-load-balancers --region "$AWS_REGION" \
-    --query "LoadBalancerDescriptions[].LoadBalancerName" --output text 2>/dev/null || true)"
+FOUND=0
+CHECK_FAILED=0
+
+# Kubernetes tags every load balancer it creates for a cluster, classic or
+# newer. The in-tree cloud provider sets kubernetes.io/cluster/<name>, and the
+# AWS Load Balancer Controller sets elbv2.k8s.aws/cluster=<name>. Asking by tag
+# finds this cluster's leftovers and nothing else in the account.
+find_cluster_lbs() {
+    aws resourcegroupstaggingapi get-resources --region "$AWS_REGION" \
+        --resource-type-filters elasticloadbalancing:loadbalancer \
+        --tag-filters "$1" \
+        --query "ResourceTagMappingList[].ResourceARN" --output text
+}
+
+if [ -z "$CLUSTER_NAME" ]; then
+    warn "Cluster name unknown, so its load balancers could not be checked"
+    CHECK_FAILED=1
+else
+    for TAG_FILTER in "Key=kubernetes.io/cluster/${CLUSTER_NAME}" \
+                      "Key=elbv2.k8s.aws/cluster,Values=${CLUSTER_NAME}"; do
+        if ! CLUSTER_LBS="$(find_cluster_lbs "$TAG_FILTER" 2>/dev/null)"; then
+            warn "Could not list load balancers by tag, the AWS CLI call failed"
+            CHECK_FAILED=1
+            break
+        fi
+        if [ -n "$CLUSTER_LBS" ]; then
+            warn "Load balancers left by this cluster: $CLUSTER_LBS"
+            FOUND=1
+        fi
+    done
+fi
+
+# Any unattached Elastic IP or volume costs money, whoever made it, so these two
+# checks cover the whole region. They can name things from other projects.
 ORPHAN_EIP="$(aws ec2 describe-addresses --region "$AWS_REGION" \
     --query "Addresses[?AssociationId==null].PublicIp" --output text 2>/dev/null || true)"
 ORPHAN_VOL="$(aws ec2 describe-volumes --region "$AWS_REGION" \
     --filters Name=status,Values=available \
     --query "Volumes[].VolumeId" --output text 2>/dev/null || true)"
 
-FOUND=0
-[ -n "$ORPHAN_LB" ]  && { warn "Load balancers still present: $ORPHAN_LB"; FOUND=1; }
-[ -n "$ORPHAN_CLB" ] && { warn "Classic load balancers still present: $ORPHAN_CLB"; FOUND=1; }
-[ -n "$ORPHAN_EIP" ] && { warn "Unattached Elastic IPs (these bill hourly): $ORPHAN_EIP"; FOUND=1; }
-[ -n "$ORPHAN_VOL" ] && { warn "Unattached EBS volumes: $ORPHAN_VOL"; FOUND=1; }
+[ -n "$ORPHAN_EIP" ] && { warn "Unattached Elastic IPs in ${AWS_REGION}, billed hourly, maybe from another project: $ORPHAN_EIP"; FOUND=1; }
+[ -n "$ORPHAN_VOL" ] && { warn "Unattached EBS volumes in ${AWS_REGION}, maybe from another project: $ORPHAN_VOL"; FOUND=1; }
 
 echo ""
 if [ "$FOUND" -eq 1 ]; then
-    warn "Something survived the destroy. Delete the above by hand or it keeps billing."
+    warn "Something may have survived the destroy. Delete what belongs to this"
+    warn "project by hand or it keeps billing. Leave anything from other projects."
     warn "Then check the console: EC2, EKS, VPC, and the Billing page tomorrow."
+    exit 1
+fi
+
+if [ "$CHECK_FAILED" -eq 1 ]; then
+    warn "The load balancer check did not run. Look in the EC2 console under"
+    warn "Load Balancers for any tagged kubernetes.io/cluster/${CLUSTER_NAME:-<cluster-name>}."
     exit 1
 fi
 

@@ -60,6 +60,9 @@ hangs on subnets that will not release, while the ELB keeps billing.
 
 After Terraform finishes, the script sweeps for orphaned load balancers,
 unattached Elastic IPs and stray EBS volumes, and exits non-zero if it finds any.
+It finds load balancers by the tag Kubernetes puts on them for this cluster, so
+it only names this cluster's. Any unattached Elastic IP or volume bills, so that
+part checks the whole region and can name another project's.
 
 ## Check the bill anyway
 
