@@ -115,14 +115,24 @@ fi
 
 # Any unattached Elastic IP or volume costs money, whoever made it, so these two
 # checks cover the whole region. They can name things from other projects.
-ORPHAN_EIP="$(aws ec2 describe-addresses --region "$AWS_REGION" \
-    --query "Addresses[?AssociationId==null].PublicIp" --output text 2>/dev/null || true)"
-ORPHAN_VOL="$(aws ec2 describe-volumes --region "$AWS_REGION" \
-    --filters Name=status,Values=available \
-    --query "Volumes[].VolumeId" --output text 2>/dev/null || true)"
+if ! ORPHAN_EIP="$(aws ec2 describe-addresses --region "$AWS_REGION" \
+        --query "Addresses[?AssociationId==null].PublicIp" --output text 2>/dev/null)"; then
+    warn "Could not list Elastic IPs, the AWS CLI call failed"
+    CHECK_FAILED=1
+elif [ -n "$ORPHAN_EIP" ]; then
+    warn "Unattached Elastic IPs in ${AWS_REGION}, billed hourly, maybe from another project: $ORPHAN_EIP"
+    FOUND=1
+fi
 
-[ -n "$ORPHAN_EIP" ] && { warn "Unattached Elastic IPs in ${AWS_REGION}, billed hourly, maybe from another project: $ORPHAN_EIP"; FOUND=1; }
-[ -n "$ORPHAN_VOL" ] && { warn "Unattached EBS volumes in ${AWS_REGION}, maybe from another project: $ORPHAN_VOL"; FOUND=1; }
+if ! ORPHAN_VOL="$(aws ec2 describe-volumes --region "$AWS_REGION" \
+        --filters Name=status,Values=available \
+        --query "Volumes[].VolumeId" --output text 2>/dev/null)"; then
+    warn "Could not list EBS volumes, the AWS CLI call failed"
+    CHECK_FAILED=1
+elif [ -n "$ORPHAN_VOL" ]; then
+    warn "Unattached EBS volumes in ${AWS_REGION}, maybe from another project: $ORPHAN_VOL"
+    FOUND=1
+fi
 
 echo ""
 if [ "$FOUND" -eq 1 ]; then
@@ -133,8 +143,9 @@ if [ "$FOUND" -eq 1 ]; then
 fi
 
 if [ "$CHECK_FAILED" -eq 1 ]; then
-    warn "The load balancer check did not run. Look in the EC2 console under"
-    warn "Load Balancers for any tagged kubernetes.io/cluster/${CLUSTER_NAME:-<cluster-name>}."
+    warn "Some checks did not run, see above. Look in the EC2 console under Load"
+    warn "Balancers, Elastic IPs and Volumes before trusting this destroy. This"
+    warn "cluster's load balancers are tagged kubernetes.io/cluster/${CLUSTER_NAME:-<cluster-name>}."
     exit 1
 fi
 
