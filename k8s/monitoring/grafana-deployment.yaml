@@ -118,8 +118,10 @@ spec:
             name: grafana-datasources
         # emptyDir, not a PVC. Grafana's SQLite database sits on the node's
         # ephemeral disk, so any dashboard saved in the UI, plus users and
-        # API keys, disappear when the pod restarts. Acceptable for a cluster
-        # that lives for a weekend, and the Prometheus datasource is
+        # API keys, disappear when the pod is replaced, for example when it
+        # moves to another node. A container restart, such as a failed
+        # liveness probe, keeps them. Acceptable for a cluster that lives for
+        # a weekend, and the Prometheus datasource is
         # provisioned from a ConfigMap so it always comes back. Production
         # would use a PersistentVolumeClaim backed by the EBS CSI driver,
         # which is out of scope here.

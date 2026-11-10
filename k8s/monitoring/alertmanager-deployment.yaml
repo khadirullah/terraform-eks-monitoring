@@ -135,7 +135,7 @@ spec:
           configMap:
             name: alertmanager-config
         # emptyDir, not a PVC. Alertmanager keeps its silences and its
-        # notification log here, so a pod restart wipes every active silence
+        # notification log here, so replacing the pod wipes every active silence
         # and can re-send alerts that were already delivered. Fine for a
         # cluster that lives for a weekend. Production would use a
         # PersistentVolumeClaim backed by the EBS CSI driver, which is out of

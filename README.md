@@ -185,7 +185,7 @@ The full reasoning for each, with the alternative it beat, is in [docs/decisions
 
 ## What is deliberately missing
 
-No persistent volumes. Prometheus and Grafana write to `emptyDir`, so metrics and dashboards are lost when a pod restarts. Production attaches EBS through the CSI driver.
+No persistent volumes. Prometheus and Grafana write to `emptyDir`, so metrics and dashboards are lost when the pod is replaced, for example when it moves to another node. A container restart inside the same pod keeps them. Production attaches EBS through the CSI driver.
 
 One NAT gateway, not one per availability zone. Cheaper, and a single point of failure for outbound traffic.
 

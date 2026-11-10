@@ -136,7 +136,9 @@ needs quorum across three.
 ### `emptyDir` everywhere, no PersistentVolumeClaims
 
 Prometheus, Grafana and Alertmanager all write to `emptyDir`. Every metric and
-every dashboard edit is lost when a pod restarts.
+every dashboard edit is lost when the pod is replaced, for example when it moves
+to another node or a rollout creates a new one. A container restart inside the
+same pod keeps them.
 
 Persistence would need the EBS CSI driver addon, an IRSA role for it, a
 StorageClass and PVCs. That is a meaningful amount of extra surface for a cluster

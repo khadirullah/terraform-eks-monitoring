@@ -80,8 +80,8 @@ spec:
             # log on the box. Fifteen days of TSDB on that risks DiskPressure,
             # and once the kubelet starts evicting, the first pod it takes is
             # usually the one that grew the disk. The retention was never real
-            # anyway, because an emptyDir dies with the pod, so nothing here
-            # survives a restart long enough to reach day fifteen. Two days is
+            # anyway, because an emptyDir is deleted with its pod, and no pod on
+            # this cluster lives long enough to reach day fifteen. Two days is
             # long enough to look back at yesterday's incident, which is all
             # this stack is for. Raise it only after moving to a PVC.
             - "--storage.tsdb.retention.time=2d"
@@ -119,7 +119,8 @@ spec:
           configMap:
             name: prometheus-config
         # emptyDir, not a PVC. The TSDB lives on the node's ephemeral disk and
-        # every metric is gone the moment the pod restarts or moves. That is
+        # every metric is gone once the pod is replaced, for example when it
+        # moves to another node. A container restart keeps the data. That is
         # fine for a cluster that exists for a weekend demo. A real deployment
         # would mount a PersistentVolumeClaim backed by the EBS CSI driver,
         # which is out of scope here because it needs its own IRSA role and
