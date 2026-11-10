@@ -36,10 +36,15 @@ on that version for up to another year and bills the control plane at the
 extended rate. With `STANDARD`, AWS upgrades it to the next minor version at the
 end of standard support.
 
-A forced upgrade can break workloads that use removed APIs, which is the cost of
-this choice. For a cluster meant to live a weekend, a surprise bill is the worse
-failure. Production teams that need to hold a version while they migrate pick
-`EXTENDED` on purpose and budget for it.
+A forced upgrade can break workloads, because the new version may remove APIs
+those workloads still use. That is the risk of this choice. A cluster meant to
+live a weekend should be destroyed long before its version leaves standard
+support, so the policy should never matter. It only matters if the cluster is
+forgotten for months, and by then it has already cost hundreds of dollars.
+`STANDARD` at least stops that bill from growing by another $0.50 an hour, and
+nothing on this cluster needs protecting from an upgrade. Production teams that
+need to hold a version while they migrate pick `EXTENDED` on purpose and budget
+for it.
 
 ### Raw `aws_*` resources instead of the community EKS module
 
