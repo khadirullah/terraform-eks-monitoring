@@ -240,4 +240,4 @@ MIT, see [LICENSE](LICENSE).
 
 ## Author
 
-**Khadirullah Mohammad** — [khadirullah.com](https://khadirullah.com) | [LinkedIn](https://linkedin.com/in/khadirullah) | [GitHub](https://github.com/khadirullah)
+**Khadirullah Mohammad** | [khadirullah.com](https://khadirullah.com) | [LinkedIn](https://linkedin.com/in/khadirullah) | [GitHub](https://github.com/khadirullah)

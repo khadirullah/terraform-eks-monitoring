@@ -1,5 +1,5 @@
 # ──────────────────────────────────────────────
-# IRSA — OIDC Identity Provider for the Cluster
+# IRSA: OIDC Identity Provider for the Cluster
 # ──────────────────────────────────────────────
 
 # Every EKS cluster ships its own OIDC issuer endpoint, but IAM does not trust it
